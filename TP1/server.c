@@ -6,11 +6,11 @@
 
 static const char GET[] = "GET ";
 static const char USER_AGENT[] = "User-Agent: ";
-static const char URI[] = "/sensor ";
+static const char URI[] = "GET /sensor ";
 static const char OK[] = "200 OK";
 static const char BAD_REQUEST[] = "400 Bad request";
 static const char NOT_FOUND[] = "404 Not found";
-//static const char TEMPLATE_DATA[] = "{datos}";
+static const char TEMPLATE_DATA[] = "{{datos}}";
 
 size_t _read_sensor(FILE *sensor, float *temperature){
     uint16_t be;
@@ -18,8 +18,8 @@ size_t _read_sensor(FILE *sensor, float *temperature){
     size_t elements_read;
 
     if ((elements_read = fread(&be, sizeof(uint16_t), 1, sensor)) > 0){
-        le = ntohs(be); // Paso big-endian a little-endian
-        *temperature = (le - 2000) / 100.0; // Calculo la temperatura
+        le = ntohs(be); 
+        *temperature = (le - 2000) / 100.0; 
     }
     return elements_read;
 }
@@ -31,14 +31,12 @@ const char* _parse_request(char *request, char **ptr){
     size_t browser_lenght = 0;
 
     request_action = strstr(request, GET);
-    if (!request_action) return BAD_REQUEST;
+    if (!request_action || (request - request_action) != 0) return BAD_REQUEST;
     request_uri = strstr(request, URI);
-    if (!request_uri) return NOT_FOUND;
+    if (!request_uri || (request - request_action) != 0) return NOT_FOUND;
     request_user_agent = strstr(request, USER_AGENT);
-    // TODO: Usar getline para esto, soy un choto.
     if (request_user_agent) {
         request_user_agent += strlen(USER_AGENT);
-        // TODO: No incrementar el puntero, sumarle el browser_lenght directamente.
         while (*(request_user_agent+browser_lenght) != '\n') {
             browser_lenght++;
         }
@@ -50,25 +48,48 @@ const char* _parse_request(char *request, char **ptr){
     return OK; 
 } 
 
-// char* _prepare_response(FILE *template, float temperature){
-//     char *response;
-//     char *line;
-//     size_t getline_len = 0;
-//     ssize_t nread;
+void _prepare_response(FILE *template, float temperature){
+    char *body;
+    char *line = NULL;
+    size_t getline_len = 0;
+    ssize_t nread;
+    size_t total_read = 0;
+    size_t first_half;
+    size_t rep_len = strlen(TEMPLATE_DATA);
+    char *replacement;
+    char temp[10];
 
-//     response = malloc(sizeof(char) * 512);
-//     while (nread = getline(&line, &getline_len, template) > 0){
+    snprintf(temp, 10, "%.2f", temperature);
+    body = malloc(sizeof(char) * 512);
 
-//     }
-// }
+    while ((nread = getline(&line, &getline_len, template)) > 0){
+        if ((replacement = strstr(line, TEMPLATE_DATA))){
+            first_half = replacement - line;
+            memcpy(body, line, first_half);
+            body += first_half;
+            memcpy(body, temp, strlen(temp));
+            body += strlen(temp);
+            memcpy(body, replacement + rep_len, nread - first_half - rep_len);
+            body += nread - first_half - rep_len;
+            nread -= rep_len - strlen(temp);
+        } else {
+             memcpy(body, line, nread);
+             body += nread;
+        }
+        total_read += nread;
+    }
+    body -= total_read;
+    body[total_read] = '\0';
+    free(line);
+    printf("%s\n", body);
+    free(body);
+    fseek(template, 0, SEEK_SET);
+}
 
-// Cargar el template como archivo, procesarlo con getline y usar strstr
-// para encontrar {datos}, reemplazar por temperature y ver si tener todo el template
-// en memoria, o si es choto.
 int main(int argc, char *argv[]){
     // TODO: Recibir bien los parametros.
     FILE *sensor;
-    //FILE *template;
+    FILE *template;
     FILE *request;
     size_t bytes_read;
     float temperature;
@@ -76,21 +97,22 @@ int main(int argc, char *argv[]){
     char request_buffer[512];
 
     sensor = fopen(argv[1], "rb");
-    //template = fopen(argv[2], "r");
+    template = fopen(argv[2], "r");
 
     while (_read_sensor(sensor, &temperature)){
         request = fopen(argv[3], "r"); // Esto emula los requests recibidos por sockets
         bytes_read = fread(request_buffer, sizeof(char), 512, request);
         request_buffer[bytes_read] = '\0';
         const char *response = _parse_request(request_buffer, &user_agent);
-        printf("STATUS: %s\n", response);
+        printf("HTTP/1.1 %s\n", response);
         if (strcmp(response, OK) == 0){
             if (user_agent) (printf("User-agent: %s\n", user_agent));
             free(user_agent);
-            printf("Temperature: %.2f\n", temperature);
+            _prepare_response(template, temperature);
         }
         fclose(request);
     }
     fclose(sensor);
+    fclose(template);
     return 0;
 }
