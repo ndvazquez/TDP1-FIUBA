@@ -1,9 +1,19 @@
 #define _GNU_SOURCE
+#define _POSIX_C_SOURCE 200112L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
 #include <arpa/inet.h>
+#include "common.h"
 
+#define BUFFER_SIZE 512
+#define HEADER_SIZE 50
+#define ARGV_SIZE 4
 static const char GET[] = "GET ";
 static const char USER_AGENT[] = "User-Agent: ";
 static const char URI[] = "GET /sensor ";
@@ -13,13 +23,13 @@ static const char NOT_FOUND[] = "404 Not found";
 static const char TEMPLATE_DATA[] = "{{datos}}";
 
 size_t _read_sensor(FILE *sensor, float *temperature){
-    uint16_t be;
-    uint16_t le;
-    size_t elements_read;
+    uint16_t ne;
+    uint16_t he;
+    size_t elements_read = 0;
 
-    if ((elements_read = fread(&be, sizeof(uint16_t), 1, sensor)) > 0){
-        le = ntohs(be); 
-        *temperature = (le - 2000) / 100.0; 
+    if ((elements_read = fread(&ne, sizeof(uint16_t), 1, sensor)) > 0){
+        he = ntohs(ne); 
+        *temperature = (he - 2000) / 100.0; 
     }
     return elements_read;
 }
@@ -84,42 +94,114 @@ void _prepare_body(FILE *template, float temperature, char *response){
 }
 
 int main(int argc, char *argv[]){
+    if (argc < ARGV_SIZE){
+        printf("Uso:\n./server <puerto> <input> [<template>]\n");
+        return 1;
+    }
     // TODO: Recibir bien los parametros.
     FILE *sensor;
     FILE *template;
-    FILE *request;
 
-    size_t bytes_read;
+    int ok;
+    char *port = argv[1];
+    int s = 0;
+    int skt, peerskt = 0;
+    struct addrinfo hints;
+    struct addrinfo *results;
+
     float temperature;
 
     char *user_agent = NULL; // Buffer para guardar el browser
-    char request_buffer[512];
+    char *request_buffer;
     char *response_buffer;
-    char header[30];
-    char *ptr;
+    char header[BUFFER_SIZE];
+    char *ptr_body;
 
-    sensor = fopen(argv[1], "rb");
-    template = fopen(argv[2], "r");
+    sensor = fopen(argv[2], "rb");
+    if (!sensor){
+        printf("Error: %s\n", strerror(errno));
+        return 1;
+    }
+
+    template = fopen(argv[3], "r");
+    if (!template){
+        printf("Error: %s\n", strerror(errno));
+        return 1;
+    }
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    s = getaddrinfo("localhost", port, &hints, &results);
+    if (s != 0) { 
+      printf("Error in getaddrinfo: %s\n", gai_strerror(s));
+      return 1;
+    }
+
+    skt = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
+    if (skt == -1) {
+      printf("Error: %s\n", strerror(errno));
+      freeaddrinfo(results);
+      return 1;
+    }
+
+    int val = 1;
+    s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+    if (s == -1) {
+      printf("Error: %s\n", strerror(errno));
+      close(skt);
+      freeaddrinfo(results);
+      return 1;
+    }
+
+    s = bind(skt, results->ai_addr, results->ai_addrlen);
+    if (s == -1) {
+      printf("Error: %s\n", strerror(errno));
+      close(skt);
+      freeaddrinfo(results);
+      return 1; 
+    }
+
+    freeaddrinfo(results);
+
+    s = listen(skt, 10);
+    if (s == -1) {
+      printf("Error: %s\n", strerror(errno));
+      close(skt);
+      return 1;
+    }
 
     while (_read_sensor(sensor, &temperature)){
-        request = fopen(argv[3], "r"); // Esto emula los sockets
-        bytes_read = fread(request_buffer, sizeof(char), 512, request);
-        request_buffer[bytes_read] = '\0';
+        peerskt = accept(skt, NULL, NULL);
+        /* Manejo del mensaje del cliente */
+        request_buffer = malloc(sizeof(char) * BUFFER_SIZE);
+        ok = receive_msg(peerskt, request_buffer, BUFFER_SIZE);
 
-        response_buffer = malloc(sizeof(char) * 512);
+        /* Manejo de la respuesta al cliente */
+        response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
         const char *status = _parse_request(request_buffer, &user_agent);
         snprintf(header, sizeof(header), "HTTP/1.1 %s\n\n", status);
-        ptr = stpncpy(response_buffer, header, strlen(header));
+        ptr_body = stpncpy(response_buffer, header, strlen(header));
         if (strcmp(status, OK) == 0){
             if (user_agent) (printf("User-agent: %s\n", user_agent));
             free(user_agent);
-            _prepare_body(template, temperature, ptr);
+            _prepare_body(template, temperature, ptr_body);
+        } else{
+            response_buffer[strlen(header)] = '\0';
         }
-        printf("%s", response_buffer);
+        ok = send_msg(peerskt, response_buffer, strlen(response_buffer));
+        printf("%d\n", ok);
         free(response_buffer);
-        fclose(request);
+        free(request_buffer);
+        shutdown(peerskt, SHUT_RDWR);
+        close(peerskt);
     }
+    
     fclose(sensor);
     fclose(template);
+    shutdown(skt, SHUT_RDWR);
+    close(skt);
     return 0;
 }
