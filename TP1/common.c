@@ -2,8 +2,9 @@
 
 int _request_done(char *buffer, int len){
     buffer[len] = '\0';
-    char *ptr = strstr(buffer, "\r\n");
-    return ptr != NULL;
+    char *tp_delimiter = strstr(buffer, "\n");
+    char *real_delimiter = strstr(buffer, "\r\n");
+    return tp_delimiter != NULL || real_delimiter != NULL;
 }
 
 int receive_msg(int skt, char *buffer, int size){

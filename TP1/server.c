@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200112L
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -10,10 +10,13 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "common.h"
+#include "common_bc.h"
 
 #define BUFFER_SIZE 512
 #define HEADER_SIZE 50
 #define ARGV_SIZE 4
+#define TEMP_LENGTH 10
+
 static const char GET[] = "GET ";
 static const char USER_AGENT[] = "User-Agent: ";
 static const char URI[] = "GET /sensor ";
@@ -23,8 +26,8 @@ static const char NOT_FOUND[] = "404 Not found";
 static const char TEMPLATE_DATA[] = "{{datos}}";
 
 size_t _read_sensor(FILE *sensor, float *temperature){
-    uint16_t ne;
-    uint16_t he;
+    uint16_t ne; // Network byte-order
+    uint16_t he; // Host byte-order
     size_t elements_read = 0;
 
     if ((elements_read = fread(&ne, sizeof(uint16_t), 1, sensor)) > 0){
@@ -64,13 +67,14 @@ void _prepare_body(FILE *template, float temperature, char *response){
     ssize_t nread;
 
     size_t total_read = 0;
-    size_t first_half;
+    size_t first_half; /* Bytes until the substring we want to replace */
     size_t rep_len = strlen(TEMPLATE_DATA);
     char *replacement;
     char temp[10];
 
     snprintf(temp, sizeof(temp), "%.2f", temperature);
-
+    /* We'll look for a given substring, and replace it
+    with the temperature we read from the sensor */
     while ((nread = getline(&line, &getline_len, template)) > 0){
         if ((replacement = strstr(line, TEMPLATE_DATA))){
             first_half = replacement - line;
@@ -87,10 +91,61 @@ void _prepare_body(FILE *template, float temperature, char *response){
         }
         total_read += nread;
     }
-    *(response) = '\n';
-    *(response+1) = '\0';
+    *(response) = '\0';
     free(line);
     fseek(template, 0, SEEK_SET);
+}
+
+int _accept_client(int skt, FILE *template, float temperature,
+                                        browser_counter_t * bc){
+    char *user_agent; // Buffer para guardar el browser
+    char *request_buffer;
+    char *response_buffer;
+    char header[BUFFER_SIZE];
+    char *ptr_body;
+    int ret_code = 0;
+    int peerskt, ok = 0;
+
+    peerskt = accept(skt, NULL, NULL);
+    if (peerskt == -1){
+        printf("Error: %s\n", strerror(errno));
+        ret_code = 1;
+    } else{
+        /* Manejo del mensaje del cliente */
+        request_buffer = malloc(sizeof(char) * BUFFER_SIZE);
+        ok = receive_msg(peerskt, request_buffer, BUFFER_SIZE);
+        shutdown(peerskt, SHUT_RD);
+        if (!ok){
+            printf("Didn't receive anything, next!\n");
+            ret_code = 1;
+        } else{
+            /* Manejo de la respuesta al cliente */
+            response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
+            const char *status = _parse_request(request_buffer, &user_agent);
+            snprintf(header, sizeof(header), "HTTP/1.1 %s\n\n", status);
+            ptr_body = stpncpy(response_buffer, header, strlen(header));
+            if (strcmp(status, OK) == 0){
+                if (user_agent) {
+                    browser_counter_insert(bc, user_agent);
+                }
+                free(user_agent);
+                _prepare_body(template, temperature, ptr_body);
+            } else{
+                response_buffer[strlen(header)] = '\0';
+                ret_code = 1;
+            }
+            ok = send_msg(peerskt, response_buffer, strlen(response_buffer));
+            shutdown(peerskt, SHUT_WR);
+            if (!ok){
+                ret_code = 1;
+                printf("Couldn't send the message to the client\n");
+            }
+            free(response_buffer);
+            free(request_buffer);
+        }     
+    }
+    close(peerskt);
+    return ret_code;
 }
 
 int main(int argc, char *argv[]){
@@ -98,24 +153,16 @@ int main(int argc, char *argv[]){
         printf("Uso:\n./server <puerto> <input> [<template>]\n");
         return 1;
     }
-    // TODO: Recibir bien los parametros.
+
     FILE *sensor;
     FILE *template;
-
-    int ok;
     char *port = argv[1];
     int s = 0;
-    int skt, peerskt = 0;
+    int skt = 0;
     struct addrinfo hints;
-    struct addrinfo *results;
-
+    struct addrinfo *res;
     float temperature;
-
-    char *user_agent = NULL; // Buffer para guardar el browser
-    char *request_buffer;
-    char *response_buffer;
-    char header[BUFFER_SIZE];
-    char *ptr_body;
+    browser_counter_t *bc;
 
     sensor = fopen(argv[2], "rb");
     if (!sensor){
@@ -126,82 +173,83 @@ int main(int argc, char *argv[]){
     template = fopen(argv[3], "r");
     if (!template){
         printf("Error: %s\n", strerror(errno));
+        fclose(sensor);
         return 1;
     }
+
+    bc = browser_counter_create();
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    s = getaddrinfo("localhost", port, &hints, &results);
+    s = getaddrinfo("localhost", port, &hints, &res);
     if (s != 0) { 
-      printf("Error in getaddrinfo: %s\n", gai_strerror(s));
-      return 1;
+        printf("Error in getaddrinfo: %s\n", gai_strerror(s));
+        freeaddrinfo(res);
+        fclose(sensor);
+        fclose(template);
+        return 1;
     }
 
-    skt = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
+    skt = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (skt == -1) {
-      printf("Error: %s\n", strerror(errno));
-      freeaddrinfo(results);
-      return 1;
+        printf("Error: %s\n", strerror(errno));
+        freeaddrinfo(res);
+        fclose(sensor);
+        fclose(template);
+        return 1;
     }
 
     int val = 1;
     s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (s == -1) {
-      printf("Error: %s\n", strerror(errno));
-      close(skt);
-      freeaddrinfo(results);
-      return 1;
+        printf("Error: %s\n", strerror(errno));
+        shutdown(skt, SHUT_RDWR);
+        close(skt);
+        freeaddrinfo(res);
+        fclose(sensor);
+        fclose(template);
+        return 1;
     }
 
-    s = bind(skt, results->ai_addr, results->ai_addrlen);
+    s = bind(skt, res->ai_addr, res->ai_addrlen);
     if (s == -1) {
-      printf("Error: %s\n", strerror(errno));
-      close(skt);
-      freeaddrinfo(results);
-      return 1; 
+        printf("Error: %s\n", strerror(errno));
+        shutdown(skt, SHUT_RDWR);
+        close(skt);
+        freeaddrinfo(res);
+        fclose(sensor);
+        fclose(template);
+        return 1; 
     }
 
-    freeaddrinfo(results);
+    freeaddrinfo(res);
 
     s = listen(skt, 10);
     if (s == -1) {
-      printf("Error: %s\n", strerror(errno));
-      close(skt);
-      return 1;
+        printf("Error: %s\n", strerror(errno));
+        shutdown(skt, SHUT_RDWR);
+        close(skt);
+        fclose(sensor);
+        fclose(template);
+        return 1;
     }
-
+    
     while (_read_sensor(sensor, &temperature)){
-        peerskt = accept(skt, NULL, NULL);
-        /* Manejo del mensaje del cliente */
-        request_buffer = malloc(sizeof(char) * BUFFER_SIZE);
-        ok = receive_msg(peerskt, request_buffer, BUFFER_SIZE);
-
-        /* Manejo de la respuesta al cliente */
-        response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
-        const char *status = _parse_request(request_buffer, &user_agent);
-        snprintf(header, sizeof(header), "HTTP/1.1 %s\n\n", status);
-        ptr_body = stpncpy(response_buffer, header, strlen(header));
-        if (strcmp(status, OK) == 0){
-            if (user_agent) (printf("User-agent: %s\n", user_agent));
-            free(user_agent);
-            _prepare_body(template, temperature, ptr_body);
-        } else{
-            response_buffer[strlen(header)] = '\0';
+        while (_accept_client(skt, template, temperature, bc)){
         }
-        ok = send_msg(peerskt, response_buffer, strlen(response_buffer));
-        printf("%d\n", ok);
-        free(response_buffer);
-        free(request_buffer);
-        shutdown(peerskt, SHUT_RDWR);
-        close(peerskt);
     }
     
     fclose(sensor);
     fclose(template);
     shutdown(skt, SHUT_RDWR);
     close(skt);
+
+    browser_counter_print_stats(bc);
+    browser_counter_destroy(bc);
+
     return 0;
 }
+
