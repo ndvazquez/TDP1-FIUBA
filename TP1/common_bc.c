@@ -2,30 +2,14 @@
 
 #define BROWSER_COUNTER_INIT_SIZE 10
 
-struct field{
-    char *user_agent;
-    int counter;
-};
-
-struct browser_counter{
-    field_t *fields;
-    size_t size;
-    size_t elements;
-};
-
-browser_counter_t* browser_counter_create(){
-    browser_counter_t *bc = malloc(sizeof(browser_counter_t));
-    if (!bc){
-        return NULL;
-    }
+int browser_counter_init(browser_counter_t *bc){
     bc->fields = malloc(sizeof(field_t*) * BROWSER_COUNTER_INIT_SIZE);
     if (!bc->fields){
-        free(bc);
-        return NULL;
+        return 1;
     }
     bc->size = BROWSER_COUNTER_INIT_SIZE;
     bc->elements = 0;
-    return bc;
+    return 0;
 }
 
 void browser_counter_insert(browser_counter_t *bc, char *user_agent){
@@ -67,6 +51,5 @@ void browser_counter_destroy(browser_counter_t *bc){
         free(bc->fields[i].user_agent);
     }
     free(bc->fields);
-    free(bc);
 }
 

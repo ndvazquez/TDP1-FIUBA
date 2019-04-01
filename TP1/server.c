@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 #include "common.h"
 #include "common_bc.h"
+#include "server.h"
 
 #define BUFFER_SIZE 512
 #define HEADER_SIZE 50
@@ -98,7 +99,7 @@ void _prepare_body(FILE *template, float temperature, char *response){
 
 int _accept_client(int skt, FILE *template, float temperature,
                                         browser_counter_t * bc){
-    char *user_agent; // Buffer para guardar el browser
+    char *user_agent; 
     char *request_buffer;
     char *response_buffer;
     char header[BUFFER_SIZE];
@@ -111,7 +112,6 @@ int _accept_client(int skt, FILE *template, float temperature,
         printf("Error: %s\n", strerror(errno));
         ret_code = 1;
     } else{
-        /* Manejo del mensaje del cliente */
         request_buffer = malloc(sizeof(char) * BUFFER_SIZE);
         ok = receive_msg(peerskt, request_buffer, BUFFER_SIZE);
         shutdown(peerskt, SHUT_RD);
@@ -119,7 +119,6 @@ int _accept_client(int skt, FILE *template, float temperature,
             printf("Didn't receive anything, next!\n");
             ret_code = 1;
         } else{
-            /* Manejo de la respuesta al cliente */
             response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
             const char *status = _parse_request(request_buffer, &user_agent);
             snprintf(header, sizeof(header), "HTTP/1.1 %s\n\n", status);
@@ -162,7 +161,7 @@ int main(int argc, char *argv[]){
     struct addrinfo hints;
     struct addrinfo *res;
     float temperature;
-    browser_counter_t *bc;
+    browser_counter_t bc;
 
     sensor = fopen(argv[2], "rb");
     if (!sensor){
@@ -177,7 +176,12 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    bc = browser_counter_create();
+    if (browser_counter_init(&bc)){
+        printf("Error: %s\n", strerror(errno));
+        fclose(sensor);
+        fclose(template);
+        return 1;
+    }
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
@@ -238,7 +242,7 @@ int main(int argc, char *argv[]){
     }
     
     while (_read_sensor(sensor, &temperature)){
-        while (_accept_client(skt, template, temperature, bc)){
+        while (_accept_client(skt, template, temperature, &bc)){
         }
     }
     
@@ -247,8 +251,8 @@ int main(int argc, char *argv[]){
     shutdown(skt, SHUT_RDWR);
     close(skt);
 
-    browser_counter_print_stats(bc);
-    browser_counter_destroy(bc);
+    browser_counter_print_stats(&bc);
+    browser_counter_destroy(&bc);
 
     return 0;
 }

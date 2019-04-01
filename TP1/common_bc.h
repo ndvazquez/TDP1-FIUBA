@@ -5,14 +5,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-struct field;
-typedef struct field field_t;
-struct browser_counter;
-typedef struct browser_counter browser_counter_t;
+typedef struct field{
+    char *user_agent;
+    int counter;
+} field_t;
 
-//Allocates memory for a Browser Counter and
-//returns a pointer to the structure.
-browser_counter_t* browser_counter_create();
+typedef struct browser_counter{
+    field_t *fields;
+    size_t size;
+    size_t elements;
+} browser_counter_t;
+
+//Initializes the structure.
+int browser_counter_init(browser_counter_t *bc);
 //Inserts a new key in the Browser Counter and sets its counter to 1.
 //If it's already in the Browser Counter, it increases the field counter by 1.
 void browser_counter_insert(browser_counter_t *bc, char *user_agent);
