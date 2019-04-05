@@ -1,0 +1,10 @@
+../.vscode/
+.vscode/
+cpplint.py
+extremas/
+filter_options
+makefile/
+multiples/
+requests/
+sensors/
+simple/
