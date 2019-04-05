@@ -21,8 +21,6 @@ int browser_counter_init(browser_counter_t *bc);
 //Inserts a new key in the Browser Counter and sets its counter to 1.
 //If it's already in the Browser Counter, it increases the field counter by 1.
 void browser_counter_insert(browser_counter_t *bc, char *user_agent);
-//If the Browser Counter gets full, it doubles its size.
-void _browser_counter_resize(browser_counter_t *bc);
 //Prints the stats for each browser inside Browser Counter.
 void browser_counter_print_stats(browser_counter_t *bc);
 //Destroys the Browser Counter.

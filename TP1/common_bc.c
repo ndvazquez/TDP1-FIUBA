@@ -2,6 +2,14 @@
 
 #define BROWSER_COUNTER_INIT_SIZE 10
 
+static void _browser_counter_resize(browser_counter_t *bc){
+    field_t * new_fields = realloc(bc->fields, bc->size * 2);
+    if (new_fields){
+        bc->fields = new_fields;
+        bc->size *= 2;
+    }
+}
+
 int browser_counter_init(browser_counter_t *bc){
     bc->fields = malloc(sizeof(field_t*) * BROWSER_COUNTER_INIT_SIZE);
     if (!bc->fields){
@@ -28,14 +36,6 @@ void browser_counter_insert(browser_counter_t *bc, char *user_agent){
     strncpy(field.user_agent, user_agent, strlen(user_agent) + 1);
     bc->fields[bc->elements] = field;
     bc->elements++;
-}
-
-void _browser_counter_resize(browser_counter_t *bc){
-    field_t * new_fields = realloc(bc->fields, bc->size * 2);
-    if (new_fields){
-        bc->fields = new_fields;
-        bc->size *= 2;
-    }
 }
 
 void browser_counter_print_stats(browser_counter_t *bc){
