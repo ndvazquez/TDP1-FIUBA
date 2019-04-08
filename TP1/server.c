@@ -12,21 +12,21 @@
 #define HEADER_SIZE 50
 #define ARGV_SIZE 4
 #define TEMP_LENGTH 10
-
-static const char GET[] = "GET ";
-static const char USER_AGENT[] = "User-Agent: ";
-static const char URI[] = "GET /sensor ";
-static const char OK[] = "200 OK";
-static const char BAD_REQUEST[] = "400 Bad request";
-static const char NOT_FOUND[] = "404 Not found";
-static const char TEMPLATE_DATA[] = "{{datos}}";
+#define GET "GET "
+#define USER_AGENT "User-Agent: "
+#define URI "GET /sensor "
+#define OK "200 OK"
+#define BAD_REQUEST "400 Bad request"
+#define NOT_FOUND "404 Not found"
+#define TEMPLATE_DATA "{{datos}}"
+#define SENSOR_TEMP_SIZE 2
 
 static size_t _read_sensor(FILE *sensor, float *temperature){
     uint16_t ne; // Network byte-order
     uint16_t he; // Host byte-order
     size_t elements_read = 0;
 
-    if ((elements_read = fread(&ne, sizeof(uint16_t), 1, sensor)) > 0){
+    if ((elements_read = fread(&ne, SENSOR_TEMP_SIZE, 1, sensor)) > 0){
         he = ntohs(ne); 
         *temperature = (he - 2000) / 100.0; 
     }
