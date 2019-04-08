@@ -1,5 +1,4 @@
 #define _GNU_SOURCE
-#define _POSIX_C_SOURCE 200112L
 
 #include <stdlib.h>
 #include <string.h>
@@ -58,23 +57,22 @@ static const char* _parse_request(char *request, char **ptr){
 } 
 
 static void _prepare_body(FILE *template, float temperature, char *response){
-    char *line = NULL;
-    size_t getline_len = 0;
-    ssize_t nread;
-
+    char line_buffer[BUFFER_SIZE];
+    
     size_t total_read = 0;
     size_t first_half; /* Bytes until the substring we want to replace */
     size_t rep_len = strlen(TEMPLATE_DATA);
     char *replacement;
-    char temp[10];
+    char temp[TEMP_LENGTH];
 
     snprintf(temp, sizeof(temp), "%.2f", temperature);
     /* We'll look for a given substring, and replace it
     with the temperature we read from the sensor */
-    while ((nread = getline(&line, &getline_len, template)) > 0){
-        if ((replacement = strstr(line, TEMPLATE_DATA))){
-            first_half = replacement - line;
-            memcpy(response, line, first_half);
+    while (fgets(line_buffer, BUFFER_SIZE, template)){
+        size_t nread = strlen(line_buffer);
+        if ((replacement = strstr(line_buffer, TEMPLATE_DATA))){
+            first_half = replacement - line_buffer;
+            memcpy(response, line_buffer, first_half);
             response += first_half;
             memcpy(response, temp, strlen(temp));
             response += strlen(temp);
@@ -82,13 +80,12 @@ static void _prepare_body(FILE *template, float temperature, char *response){
             response += nread - first_half - rep_len;
             nread -= rep_len - strlen(temp);
         } else {
-             memcpy(response, line, nread);
+             memcpy(response, line_buffer, nread);
              response += nread;
         }
         total_read += nread;
     }
     *(response) = '\0';
-    free(line);
     fseek(template, 0, SEEK_SET);
 }
 
