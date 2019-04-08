@@ -38,16 +38,15 @@ int main(int argc, char *argv[]){
 	char *host = argv[1];
 	char *port = argv[2];
 	socket_t skt;
-	if (socket_init(&skt, host, port, 0)){
+	if (socket_connect(&skt, host, port)){
 		printf("Error: %s\n", strerror(errno));
 		fclose(request);
 		free(request_buffer);
         return 1;
 	}
 
-	int ok;
-	ok = socket_send_msg(&skt, request_buffer, request_len);
-
+	int	ok = socket_send(&skt, request_buffer, request_len);
+	socket_shutdown_write(&skt);
 	if (!ok){
 		printf("Couldn't send the message\n");
 		fclose(request);
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]){
 
 	char *response_buffer;
 	response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
-	ok = socket_receive_msg(&skt, response_buffer, BUFFER_SIZE);
+	ok = socket_receive(&skt, response_buffer, BUFFER_SIZE);
 
 	if (!ok){
 		printf("Couldn't receive a response from the server\n");
