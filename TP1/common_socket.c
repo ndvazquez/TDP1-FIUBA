@@ -8,128 +8,130 @@
 #include <errno.h>
 #include "common_socket.h"
 
-static int _request_done(char *buffer, int len){
-    buffer[len] = '\0';
-    char *tp_delimiter = strstr(buffer, "\n");
-    char *real_delimiter = strstr(buffer, "\r\n");
-    return tp_delimiter != NULL || real_delimiter != NULL;
+static int _socket_create(socket_t *skt, int ai_family,
+                int ai_socktype, int ai_protocol){
+    skt->fd = socket(ai_family, ai_socktype, ai_protocol);
+    if (skt->fd == -1) {
+        printf("Error: %s\n", strerror(errno));
+        return 1;
+    }
+    return 0;
 }
 
-int socket_init(socket_t *skt, char *host, char *port, int passive){
+static int _wrapper_getaddrinfo(char *host, char *port, struct addrinfo **ptr,
+            int passive){
     struct addrinfo hints;
     struct addrinfo *res;
-    int s;
-
-    skt->type = passive ? PASSIVE : ACTIVE;
-    skt->peerskt_fd = 0;
-
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = passive ? AI_PASSIVE : 0;
-    
-    s = getaddrinfo("localhost", port, &hints, &res);
+
+    int s = getaddrinfo(host, port, &hints, &res);
     if (s != 0) { 
         printf("Error in getaddrinfo: %s\n", gai_strerror(s));
-        freeaddrinfo(res);
-        return 1;
+        freeaddrinfo(*ptr);
+        return -1;
     }
+    *ptr = res;
+    return 0;
+}
 
-    skt->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (skt->fd == -1) {
-        printf("Error: %s\n", strerror(errno));
-        freeaddrinfo(res);
-        return 1;
+int socket_bind_and_listen(socket_t *skt, char *host, char *port){
+    struct addrinfo *res = NULL;
+    if (_wrapper_getaddrinfo(host, port, &res, 1)){
+        return -1;
     }
-
-    if (skt->type == PASSIVE){
+    int did_we_managed_to_bind = 0;
+    struct addrinfo *ptr;
+    for (ptr = res; ptr && !did_we_managed_to_bind; ptr = ptr->ai_next){
+        if (_socket_create(skt, ptr->ai_family,
+                ptr->ai_socktype, ptr->ai_protocol)){
+            continue;
+        }
         int val = 1;
-        s = setsockopt(skt->fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+        int s = setsockopt(skt->fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
-            shutdown(skt->fd, SHUT_RDWR);
             close(skt->fd);
-            freeaddrinfo(res);
-            return 1;
+            continue;
         }
 
-        s = bind(skt->fd, res->ai_addr, res->ai_addrlen);
+        s = bind(skt->fd, ptr->ai_addr, ptr->ai_addrlen);
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
-            shutdown(skt->fd, SHUT_RDWR);
             close(skt->fd);
-            freeaddrinfo(res);
-            return 1; 
+            continue; 
         }
-
-        freeaddrinfo(res);
 
         s = listen(skt->fd, 10);
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
-            shutdown(skt->fd, SHUT_RDWR);
             close(skt->fd);
-            return 1;
+            continue;
         }
-    } else {
-        s = connect(skt->fd, res->ai_addr, res->ai_addrlen);
+        did_we_managed_to_bind = (s != -1);
+    }
+    freeaddrinfo(res);
+    return did_we_managed_to_bind ? 0 : -1;
+}
+
+int socket_connect(socket_t *skt, char *host, char *port){
+    struct addrinfo *res = NULL;
+    if (_wrapper_getaddrinfo(host, port, &res, 0)){
+        return -1;
+    }
+
+    struct addrinfo *ptr;
+    int are_we_connected = 0;
+    for (ptr = res; ptr && !are_we_connected; ptr = ptr->ai_next){
+        if (_socket_create(skt, ptr->ai_family,
+                ptr->ai_socktype, ptr->ai_protocol)){
+            continue;
+        }
+        int s = connect(skt->fd, res->ai_addr, res->ai_addrlen);
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
             close(skt->fd);
-            freeaddrinfo(res);
-            return 1;
+            continue;
         }
-        freeaddrinfo(res);
+        are_we_connected = (s != -1);
     }
-
-    return 0;
+    freeaddrinfo(res);
+    return are_we_connected ? 0 : -1;
 }
 
-int socket_receive_msg(socket_t *skt, char *buffer, int size){
+void socket_init(socket_t *skt){
+    skt->fd = -1;
+}
+
+int socket_receive(socket_t *skt, char *buffer, int size){
     int s = 0;
     int received = 0;
     int is_the_socket_still_valid = 1;
-    int skt_fd;
 
-    if (skt->type == PASSIVE){
-        skt->peerskt_fd = accept(skt->fd, NULL, NULL);
-        skt_fd = skt->peerskt_fd;
-    } else{
-        skt_fd = skt->fd;
-    }
-
-    while (received < size && !_request_done(buffer, received) 
-    && is_the_socket_still_valid){
-        s = recv(skt_fd, &buffer[received], size-received, MSG_NOSIGNAL);
-
+    while (received < size && is_the_socket_still_valid){
+        s = recv(skt->fd, &buffer[received], size-received, MSG_NOSIGNAL);
         if (s == 0){
-            is_the_socket_still_valid = 0;
+            if (received == 0) is_the_socket_still_valid = 0;
+            break;
         } else if (s < 0){
             is_the_socket_still_valid = 0;
         } else{
             received += s;
         }
     }
-    shutdown(skt_fd, SHUT_RD);
     if (is_the_socket_still_valid) return received;
     return -1;
 }
 
-int socket_send_msg(socket_t *skt, char *buffer, int size){
+int socket_send(socket_t *skt, char *buffer, int size){
     int s = 0;
     int sent = 0;
     int is_the_socket_still_valid = 1;
-    int skt_fd;
-
-    if (skt->type == PASSIVE){
-        skt_fd = skt->peerskt_fd;
-    } else{
-        skt_fd = skt->fd;
-    }
 
     while (sent < size && is_the_socket_still_valid){
-        s = send(skt_fd, &buffer[sent], size-sent, MSG_NOSIGNAL);
-
+        s = send(skt->fd, &buffer[sent], size-sent, MSG_NOSIGNAL);
         if (s == 0){
             is_the_socket_still_valid = 0;
         } else if (s < 0){
@@ -138,20 +140,31 @@ int socket_send_msg(socket_t *skt, char *buffer, int size){
             sent += s;
         }
     }
-    shutdown(skt_fd, SHUT_WR);
-    if (skt->type == PASSIVE){
-        close(skt_fd);
-    }
     if (is_the_socket_still_valid) return sent;
     return -1;  
 }
 
-void socket_destroy(socket_t *skt){
-    if (skt->peerskt_fd){
-        shutdown(skt->peerskt_fd, SHUT_RDWR);
-        close(skt->peerskt_fd);
+int socket_accept(socket_t *server, socket_t *client){
+    client->fd = accept(server->fd, NULL, NULL);
+    if (client->fd == -1){
+        printf("Error: %s\n", strerror(errno));
+        return -1;
     }
-    shutdown(skt->fd, SHUT_RDWR);
-    close(skt->fd);
+    return 0;
+}
+
+void socket_shutdown_write(socket_t *skt){
+    shutdown(skt->fd, SHUT_WR);
+}
+
+void socket_shutdown_read(socket_t *skt){
+    shutdown(skt->fd, SHUT_RD);
+}
+
+void socket_destroy(socket_t *skt){
+    if (skt->fd != -1){
+        shutdown(skt->fd, SHUT_RDWR);
+        close(skt->fd);
+    }     
 }
 

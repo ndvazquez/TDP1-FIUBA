@@ -26,8 +26,7 @@ int main(int argc, char *argv[]){
 	size_t request_len = ftell(request);
 	fseek(request, 0, SEEK_SET);
 
-	char *request_buffer;
-	request_buffer = malloc(sizeof(char) * request_len + 1);
+	char *request_buffer = malloc(sizeof(char) * request_len + 1);
 	size_t total_read = fread(request_buffer, 1, request_len, request);
 	if (total_read != request_len){
 		free(request_buffer);
@@ -38,6 +37,7 @@ int main(int argc, char *argv[]){
 	char *host = argv[1];
 	char *port = argv[2];
 	socket_t skt;
+	socket_init(&skt);
 	if (socket_connect(&skt, host, port)){
 		printf("Error: %s\n", strerror(errno));
 		fclose(request);
@@ -46,32 +46,31 @@ int main(int argc, char *argv[]){
 	}
 
 	int	ok = socket_send(&skt, request_buffer, request_len);
-	socket_shutdown_write(&skt);
-	if (!ok){
+	socket_shutdown_write(&skt); // Por consigna, cerramos la escritura.
+	if (ok == -1 || ok == 0){
 		printf("Couldn't send the message\n");
 		fclose(request);
 		free(request_buffer);
 		socket_destroy(&skt);
 		return 1;
 	}
+	free(request_buffer);
 
-	char *response_buffer;
-	response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
+	char *response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
 	ok = socket_receive(&skt, response_buffer, BUFFER_SIZE);
-
-	if (!ok){
+	if (ok == -1 || ok == 0){
 		printf("Couldn't receive a response from the server\n");
 		fclose(request);
-		free(request_buffer);
+		free(response_buffer);
 		socket_destroy(&skt);
 		return 1;
 	}
 	
 	printf("%s", response_buffer);
-	free(request_buffer);
 	free(response_buffer);
 	socket_destroy(&skt);
 	fclose(request);
 
 	return 0;
 }
+
