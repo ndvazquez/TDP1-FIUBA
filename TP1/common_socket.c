@@ -49,8 +49,8 @@ int socket_bind_and_listen(socket_t *skt, char *host, char *port){
                 ptr->ai_socktype, ptr->ai_protocol)){
             continue;
         }
-        int val = 1;
-        int s = setsockopt(skt->fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+        int v = 1;
+        int s = setsockopt(skt->fd, SOL_SOCKET, SO_REUSEADDR, &v, sizeof(v));
         if (s == -1) {
             printf("Error: %s\n", strerror(errno));
             close(skt->fd);
