@@ -7,7 +7,7 @@
 
 #define BUFFER_SIZE 512
 #define HEADER_SIZE 50
-#define TEMP_LENGTH 10
+#define TEMP_LENGTH 50
 #define GET "GET "
 #define USER_AGENT "User-Agent: "
 #define URI "GET /sensor "
@@ -21,28 +21,29 @@ static const char* _parse_request_and_return_status(char *request, char **ptr){
     if (!request_action || (request - request_action) != 0) return BAD_REQUEST;
     char *request_uri = strstr(request, URI);
     if (!request_uri || (request - request_action) != 0) return NOT_FOUND;
-    char *request_user_agent = strstr(request, USER_AGENT);
-    if (request_user_agent) {
-        request_user_agent += strlen(USER_AGENT);
-        size_t browser_lenght = 0;
-        while (*(request_user_agent+browser_lenght) != '\n') {
-            browser_lenght++;
-        }
-        char *browser = malloc(sizeof(char) * (browser_lenght + 1));
-        memcpy(browser, request_user_agent, browser_lenght);
-        browser[browser_lenght] = '\0';
-        *ptr = browser;
-    }
+    *ptr = strstr(request, USER_AGENT);
+    if (*ptr) *ptr += strlen(USER_AGENT);
     return OK; 
 } 
 
-static void _prepare_body(FILE *template, float temperature, char *response,
+static void _prepare_body(FILE *template, float temperature, char **response,
             const char* status){
+    fseek(template, 0, SEEK_END);
+	int template_len = ftell(template);
+	fseek(template, 0, SEEK_SET);
+
     char header[HEADER_SIZE];
     snprintf(header, sizeof(header), "HTTP/1.1 %s\n\n", status);
-    char* ptr_body = stpncpy(response, header, strlen(header));
+    int header_len = strlen(header);
+    char temp[TEMP_LENGTH];
+    int temp_len = snprintf(temp, sizeof(temp), "%.2f", temperature);
+    int response_len = temp_len + template_len + header_len + 1;
+
+    *response = malloc(sizeof(char) * response_len);
+
+    char* ptr_body = stpncpy(*response, header, header_len);
     if (strcmp(status, OK) != 0){
-        response[strlen(header)] = '\0';
+        (*response)[header_len] = '\0';
         return;
     }
 
@@ -51,9 +52,7 @@ static void _prepare_body(FILE *template, float temperature, char *response,
     size_t first_half; 
     size_t rep_len = strlen(TEMPLATE_DATA);
     char *replacement;
-    char temp[TEMP_LENGTH];
-
-    snprintf(temp, sizeof(temp), "%.2f", temperature);
+    
     /* We'll look for a given substring, and replace it
     with the temperature we read from the sensor */
     while (fgets(line_buffer, BUFFER_SIZE, template)){
@@ -78,7 +77,7 @@ static void _prepare_body(FILE *template, float temperature, char *response,
 }
 
 int http_processor_init(http_processor_t *hp, char *request_buffer,
-        char *response_buffer, const char *template_path){
+        char **response_buffer, const char *template_path){
     if (!request_buffer || !response_buffer){
         return 1;
     }
@@ -103,4 +102,3 @@ int http_processor_process(http_processor_t *hp, float temperature,
 void http_processor_destroy(http_processor_t *hp){
     fclose(hp->http_template);
 }
-

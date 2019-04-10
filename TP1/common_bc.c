@@ -20,20 +20,29 @@ int browser_counter_init(browser_counter_t *bc){
     return 0;
 }
 
-void browser_counter_insert(browser_counter_t *bc, char *user_agent){
+void browser_counter_insert(browser_counter_t *bc, const char *user_agent){
+    size_t browser_lenght = 0;
+    while (*(user_agent+browser_lenght) != '\n') {
+        browser_lenght++;
+    }
+    char *browser = malloc(sizeof(char) * (browser_lenght + 1));
+    memcpy(browser, user_agent, browser_lenght);
+    browser[browser_lenght] = '\0';
+
     if (bc->size == bc->elements){
         _browser_counter_resize(bc);
     }
     for (int i = 0; i < bc->elements; ++i){
-        if (strcmp(bc->fields[i].user_agent, user_agent) == 0){
+        if (strcmp(bc->fields[i].user_agent, browser) == 0){
             bc->fields[i].counter++;
+            free(browser);
             return;
         }
     }
+
     field_t field;
     field.counter = 1;
-    field.user_agent = malloc(sizeof(char) * strlen(user_agent) + 1);
-    strncpy(field.user_agent, user_agent, strlen(user_agent) + 1);
+    field.user_agent = browser;
     bc->fields[bc->elements] = field;
     bc->elements++;
 }
@@ -52,4 +61,3 @@ void browser_counter_destroy(browser_counter_t *bc){
     }
     free(bc->fields);
 }
-

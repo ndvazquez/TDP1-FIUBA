@@ -4,8 +4,8 @@
 #include <string.h>
 #include <errno.h>
 #include "common_socket.h"
+#include "common_receiver.h"
 
-#define BUFFER_SIZE 512
 #define ARGV_SIZE 3
 #define REQUEST_FILE 4
 
@@ -56,12 +56,14 @@ int main(int argc, char *argv[]){
 	}
 	free(request_buffer);
 
-	char *response_buffer = malloc(sizeof(char) * BUFFER_SIZE);
-	ok = socket_receive(&skt, response_buffer, BUFFER_SIZE);
+	char *response_buffer = NULL;
+	receiver_t rcv;
+	receiver_init(&rcv);
+	ok = receiver_receive_data(&rcv, &skt, &response_buffer);
 	if (ok == -1 || ok == 0){
 		printf("Couldn't receive a response from the server\n");
 		fclose(request);
-		free(response_buffer);
+		if (response_buffer) free(response_buffer);
 		socket_destroy(&skt);
 		return 1;
 	}
@@ -73,4 +75,3 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
-
