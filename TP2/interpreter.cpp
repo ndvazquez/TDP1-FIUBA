@@ -2,19 +2,19 @@
 #include <cstring>
 #include <iostream>
 
-Interpreter::Interpreter(char *script_buffer){
-    for(int i = 0; i < this->_size; ++i){
-        this->_array[i] = 0;
-    }
+Interpreter::Interpreter(string &script_buffer){
+    memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
-    this->_ip = script_buffer;
+    this->_ip = script_buffer.begin();
 }
 
 void Interpreter::increaseDataPointer(){
+    if (_dp == _array+_size) return;   
     _dp += 1;
 }
 
 void Interpreter::decreaseDataPointer(){
+    if (_dp == _array) return; 
     _dp -= 1;
 }
 
@@ -40,9 +40,9 @@ void Interpreter::readDataValue(){
     }
 }
 
-void Interpreter::openingBracket(const char *start){
+void Interpreter::openingBracket(){
     if (*_dp){
-        _stack.push(_ip - start);
+        _stack.push(_ip);
     } else {
         int counter = 1;
         while (counter){
@@ -53,16 +53,15 @@ void Interpreter::openingBracket(const char *start){
     }
 }
 
-void Interpreter::closingBracket(const char *start){;
+void Interpreter::closingBracket(){;
     if (*_dp){
-        _ip = start + _stack.top();
+        _ip = _stack.top();
     } else {
         _stack.pop();
     }
 }
 
 void Interpreter::run(){
-    const char *start = _ip;
     while (*_ip){
         switch (*_ip){
             case '>':
@@ -84,10 +83,10 @@ void Interpreter::run(){
                 printDataValue();
                 break;
             case '[':
-                openingBracket(start);
+                openingBracket();
                 break;
             case ']':
-                closingBracket(start);
+                closingBracket();
                 break;
             default:
                 break;
@@ -95,4 +94,3 @@ void Interpreter::run(){
         _ip++;
     }
 }
-

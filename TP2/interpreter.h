@@ -1,16 +1,17 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-#include <fstream>
 #include <stack>
+#include <string>
+
 using namespace std;
 
 class Interpreter{
     static const int _size = 30000;
     char _array[_size];
     char *_dp;
-    const char *_ip;
-    stack<int> _stack;
+    string::iterator _ip;
+    stack<string::iterator> _stack;
 
     void increaseDataPointer();
     void decreaseDataPointer();
@@ -18,12 +19,11 @@ class Interpreter{
     void decreaseDataValue();
     void printDataValue();
     void readDataValue();
-    void openingBracket(const char *start);
-    void closingBracket(const char *start);
+    void openingBracket();
+    void closingBracket();
 
     public:
-    Interpreter(char *script_buffer);
-
+    Interpreter(string &script_buffer);
     void run();
 };
 
