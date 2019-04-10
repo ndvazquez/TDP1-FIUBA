@@ -1,6 +1,4 @@
-#include <stdlib.h>
 #include <errno.h>
-#include <stdbool.h>
 #include "common_socket.h"
 #include "common_receiver.h"
 #include "server_bc.h"
