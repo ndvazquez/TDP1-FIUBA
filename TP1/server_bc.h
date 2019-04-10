@@ -1,5 +1,5 @@
-#ifndef COMMON_BC_H
-#define COMMON_BC_H
+#ifndef SERVER_BC_H
+#define SERVER_BC_H
 
 #include <string.h>
 #include <stdlib.h>

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include "common_http_processor.h"
+#include "server_http_processor.h"
 
 #define BUFFER_SIZE 512
 #define HEADER_SIZE 50

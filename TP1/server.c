@@ -2,10 +2,10 @@
 #include <errno.h>
 #include <stdbool.h>
 #include "common_socket.h"
-#include "common_bc.h"
-#include "common_http_processor.h"
-#include "common_sensor_reader.h"
 #include "common_receiver.h"
+#include "server_bc.h"
+#include "server_http_processor.h"
+#include "server_sensor_reader.h"
 
 #define ARGV_SIZE 4
 

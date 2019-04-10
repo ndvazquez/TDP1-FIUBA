@@ -1,5 +1,5 @@
-#ifndef COMMON_HTTP_PROCESSOR_H
-#define COMMON_HTTP_PROCESSOR_H
+#ifndef SERVER_HTTP_PROCESSOR_H
+#define SERVER_HTTP_PROCESSOR_H
 
 #include <stdio.h>
 

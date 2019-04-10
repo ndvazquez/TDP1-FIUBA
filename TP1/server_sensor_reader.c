@@ -1,5 +1,5 @@
 #include <arpa/inet.h>
-#include "common_sensor_reader.h"
+#include "server_sensor_reader.h"
 
 #define SENSOR_TEMP_SIZE 2
 

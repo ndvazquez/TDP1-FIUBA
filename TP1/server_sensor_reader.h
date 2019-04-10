@@ -1,5 +1,5 @@
-#ifndef COMMON_SENSOR_READER_H
-#define COMMON_SENSOR_READER_H
+#ifndef SERVER_SENSOR_READER_H
+#define SERVER_SENSOR_READER_H
 
 #include <stdio.h>
 

@@ -1,4 +1,4 @@
-#include "common_bc.h"
+#include "server_bc.h"
 
 #define BROWSER_COUNTER_INIT_SIZE 10
 
