@@ -1,25 +1,23 @@
 #ifndef COMMON_SOCKET_H
 #define COMMON_SOCKET_H
 
-typedef enum{
-	PASSIVE,
-	ACTIVE
-}socket_type_t;
-
 typedef struct socket{
     int fd;
-    int peerskt_fd;
-    socket_type_t type;
 } socket_t;
 
-//Initializes a Socket, the argument passive determines if the socket
-//will be a passive socket (i.e for using it in a server to accept clients)
-//or active (i.e for using it in a client to connect with a given server).
-int socket_init(socket_t *skt, char *host, char *port, int passive);
+//Initializes a Socket.
+void socket_init(socket_t *skt);
+int socket_bind_and_listen(socket_t *skt, char *host, char *port);
+int socket_connect(socket_t *skt, char *host, char *port);
 //Receives a text based message through a socket.
-int socket_receive_msg(socket_t *skt, char *buffer, int size);
+int socket_receive(socket_t *skt, char *buffer, int size);
 //Sends a text based message through a socket.
-int socket_send_msg(socket_t *skt, char *buffer, int size);
+int socket_send(socket_t *skt, char *buffer, int size);
+//Given a passive socket, server, it tries to accept a peer and saves
+//the file descriptor in client.
+int socket_accept(socket_t *server, socket_t *client);
+void socket_shutdown_write(socket_t *skt);
+void socket_shutdown_read(socket_t *skt);
 //Frees all the resources used by Socket.
 void socket_destroy(socket_t *skt);
 
