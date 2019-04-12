@@ -1,17 +1,21 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
+#include "script_container.h"
 #include <stack>
 #include <string>
-
-using namespace std;
+#include <fstream>
 
 class Interpreter{
     static const int _size = 30000;
     char _array[_size];
     char *_dp;
-    string::iterator _ip;
-    stack<string::iterator> _stack;
+    std::string _script;
+    std::string::iterator _ip;
+    std::ofstream _outputStream;
+    std::ifstream _inputStream;
+
+    std::stack<std::string::iterator> _stack;
 
     void increaseDataPointer();
     void decreaseDataPointer();
@@ -23,7 +27,9 @@ class Interpreter{
     void closingBracket();
 
     public:
-    Interpreter(string &script_buffer);
+    explicit Interpreter(std::string &&script_buffer);
+    explicit Interpreter(ScriptContainer sc);
+    ~Interpreter();
     void run();
 };
 
