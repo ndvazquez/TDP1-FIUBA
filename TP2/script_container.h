@@ -9,14 +9,19 @@ class ScriptContainer{
     std::string _inputFile;
     std::string _outputFile;
     std::string _script;
+    bool _isValid;
 
     public:
-    ScriptContainer(std::string priority, std::string input,
-        std::string output, std::string script);
-    std::string getPriority();
-    std::string getInputFile();
-    std::string getOutputFile();
-    std::string getScript(); 
+    ScriptContainer();
+    ScriptContainer(std::string &&priority,
+                    std::string &&input,
+                    std::string &&output,
+                    std::string &&script);
+    std::string &getPriority();
+    std::string &getInputFile();
+    std::string &getOutputFile();
+    std::string &getScript(); 
+    bool isValid();
     bool compare(ScriptContainer sc);
 };
 
