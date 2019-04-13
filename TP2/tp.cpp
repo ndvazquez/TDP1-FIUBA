@@ -1,10 +1,13 @@
-#include "interpreter.h"
 #include <queue> 
 #include <sstream>
 #include <iostream>
 #include <cstring>
 #include <string>
 #include <vector>
+#include "interpreter.h"
+#include "tokenizer.h"
+#include "worker.h"
+#include "priority_queue_protected.h"
 
 #define ARGC_SIZE 3
 int main(int argc, char **argv){
@@ -26,37 +29,40 @@ int main(int argc, char **argv){
         interpreter.run();
     }
     if (strcmp(argv[1], "thread-pool") == 0){
-        std::priority_queue<ScriptContainer,
-            std::vector<ScriptContainer>, scCompare> pq;
+        PriorityQueueProtected pq;
+        std::vector<Thread*> threads;
+        int numberOfThreads = atoi(argv[2]);
+        for (int i = 0; i < numberOfThreads; ++i){
+            threads.push_back(new Worker(pq));
+        }
+        for (int i = 0; i < numberOfThreads; ++i){
+            threads[i]->start();
+        }
+        Tokenizer tokenizer;
         std::string line;
         while (getline(std::cin, line, ')')){
-            if (!std::cin.good()) continue;
-            std::vector<std::string> strings;
-            // Abstraer esto en un split o tokenizer propio.
-            // Pensar cómo ser menos choto en memoria y
-            // si realmente necesito ScriptContainer.
-            std::string delimiter = ", ";
-            size_t pos = 0;
-            std::string token;
-            while ((pos = line.find(delimiter)) != std::string::npos){
-                token = line.substr(0, pos);
-                strings.push_back(token);
-                line.erase(0, pos + delimiter.length());
-            }
-            strings.push_back(line);
+            if (!std::cin.good()) {
+                continue;
+                }
+            std::vector<std::string> strings = tokenizer.tokenize(line);
             ScriptContainer sc(
-                strings[1],
-                strings[2],
-                strings[3],
-                strings[4]); 
-            pq.push(std::move(sc));
+                std::move(strings[1]),
+                std::move(strings[2]),
+                std::move(strings[3]),
+                std::move(strings[4])); 
+            pq.push(sc);
         }
-        while (!pq.empty()){
-            // Por el poder de la no concurrencia!
-            ScriptContainer sc = pq.top();
-            Interpreter interpreter(sc);
-            interpreter.run();
-            pq.pop();
+        while (!pq.isFinished()){
+            if (pq.isEmpty()){
+                pq.finish();
+                std::cout << "Terminamos de procesar, goodbye!" << std::endl;
+            } 
         }
+        for (int i = 0; i < numberOfThreads; ++i){
+            std::cout << "Joineando el Thread " << i << std::endl;
+            threads[i]->join();
+            std::cout << "Termino de joinear el Thread " << i << std::endl;
+            delete threads[i];
+        }       
     }
 }

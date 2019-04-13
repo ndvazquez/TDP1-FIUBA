@@ -13,7 +13,7 @@ Interpreter::Interpreter(std::string &&script_buffer){
 Interpreter::Interpreter(ScriptContainer sc){
     memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
-    this->_script = sc.getScript();
+    this->_script = std::move(sc.getScript());
     this->_ip = _script.begin();
     this->_outputStream.open(sc.getOutputFile());
     this->_inputStream.open(sc.getInputFile());
