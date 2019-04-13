@@ -55,13 +55,10 @@ int main(int argc, char **argv){
         while (!pq.isFinished()){
             if (pq.isEmpty()){
                 pq.finish();
-                std::cout << "Terminamos de procesar, goodbye!" << std::endl;
             } 
         }
         for (int i = 0; i < numberOfThreads; ++i){
-            std::cout << "Joineando el Thread " << i << std::endl;
             threads[i]->join();
-            std::cout << "Termino de joinear el Thread " << i << std::endl;
             delete threads[i];
         }       
     }
