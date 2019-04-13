@@ -16,10 +16,9 @@ void PriorityQueueProtected::push(ScriptContainer sc){
 ScriptContainer PriorityQueueProtected::pop(){
     std::unique_lock<std::mutex> _lock(_mtx);
     ScriptContainer sc;
-    // Esto loopea hasta que el lambda devuelva true y ahí levanta el lock.
-    // Debería levantar el lock cuando hay cosas en la cola y no terminé.
-    // Y también cuando la cola está vacía y terminé.
-    _cv.wait(_lock, [this]{return (!isEmpty() && !isFinished());});
+    while (isEmpty() && !isFinished()){
+        _cv.wait(_lock);
+    }
     if (!isEmpty()){
         sc = _pq.top();
         _pq.pop();
@@ -36,7 +35,6 @@ bool PriorityQueueProtected::isFinished(){
 }
 
 void PriorityQueueProtected::finish(){
-    // Notifico a todos que... cambió el estado? No debería ser necesario.
     std::unique_lock<std::mutex> _lock(_mtx);
     _finished = true;
     _cv.notify_all();
