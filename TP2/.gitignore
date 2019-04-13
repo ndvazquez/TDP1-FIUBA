@@ -4,6 +4,5 @@ tp
 archivos_*/
 filter_options
 *.py
-Makefile
 *.zip
 prueba/
