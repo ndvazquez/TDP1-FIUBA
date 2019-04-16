@@ -7,7 +7,7 @@
 class Worker : public Thread{
     PriorityQueueProtected &_pq;
     public:
-    Worker(PriorityQueueProtected &pq);
+    explicit Worker(PriorityQueueProtected &pq);
     void run();
 };
 

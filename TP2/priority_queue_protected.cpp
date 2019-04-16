@@ -7,7 +7,6 @@ PriorityQueueProtected::PriorityQueueProtected(){
 }
 
 void PriorityQueueProtected::push(ScriptContainer sc){
-    // Wake up!
     std::unique_lock<std::mutex> _lock(_mtx);
     _pq.push(sc);
     _cv.notify_one();
