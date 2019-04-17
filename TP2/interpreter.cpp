@@ -116,6 +116,6 @@ void Interpreter::run(){
             default:
                 break;
         }
-        _ip++;
+        ++_ip;
     }
 }

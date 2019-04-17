@@ -8,6 +8,7 @@
 #include "tokenizer.h"
 #include "worker.h"
 #include "priority_queue_protected.h"
+#include "threadpool.h"
 
 #define ARGC_SIZE 3
 int main(int argc, char **argv){
@@ -30,14 +31,9 @@ int main(int argc, char **argv){
     }
     if (strcmp(argv[1], "thread-pool") == 0){
         PriorityQueueProtected pq;
-        std::vector<Thread*> threads;
         int numberOfThreads = atoi(argv[2]);
-        for (int i = 0; i < numberOfThreads; ++i){
-            threads.push_back(new Worker(pq));
-        }
-        for (int i = 0; i < numberOfThreads; ++i){
-            threads[i]->start();
-        }
+        Threadpool threadpool(numberOfThreads, pq);
+        threadpool.run();
         Tokenizer tokenizer;
         std::string line;
         while (getline(std::cin, line, ')')){
@@ -56,10 +52,6 @@ int main(int argc, char **argv){
             if (pq.isEmpty()){
                 pq.finish();
             } 
-        }
-        for (int i = 0; i < numberOfThreads; ++i){
-            threads[i]->join();
-            delete threads[i];
-        }       
+        }    
     }
 }
