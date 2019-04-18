@@ -1,0 +1,8 @@
+bf_scripts/
+*.o
+tp
+archivos_*/
+filter_options
+*.py
+*.zip
+prueba/
