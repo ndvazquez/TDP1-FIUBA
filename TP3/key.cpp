@@ -7,7 +7,7 @@ Key::Key(unsigned char exponent, unsigned short modulus) :
                 _exponent(exponent),
                 _modulus(modulus){}
 
- std::ostream& operator<<(std::ostream& os, const Key &key){
+std::ostream& operator<<(std::ostream& os, const Key &key){
     os << (int) key.getExponent() << " " << key.getModulus();
     return os;
 }
