@@ -8,8 +8,8 @@ class Protocol{
 
     public:
     Protocol(Socket* socket);
-    CertificateHandler receiveCertificate();
-    void sendCertificate(CertificateHandler &certificate);  
+    void receiveCertificate(CertificateHandler &ch);
+    void sendCertificate(CertificateHandler &ch);  
 };
 
 #endif

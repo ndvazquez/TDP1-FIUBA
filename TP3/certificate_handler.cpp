@@ -70,3 +70,23 @@ std::string CertificateHandler::getStartingDate(){
 std::string CertificateHandler::getEndingDate(){
     return _e_date;
 }
+
+void CertificateHandler::setSerial(uint32_t &serial){
+    this->_serial = serial;
+}
+
+void CertificateHandler::setSubject(std::string &subject){
+    this->_subject = subject;
+}
+void CertificateHandler::setIssuer(std::string &issuer){
+    this->_issuer = issuer;
+}
+void CertificateHandler::setStartingDate(std::string &s_date){
+    this->_s_date = s_date;
+}
+void CertificateHandler::setEndingDate(std::string &e_date){
+    this->_e_date = e_date;
+}
+void CertificateHandler::setKey(Key key){
+    this->_key = key;
+}

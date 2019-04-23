@@ -30,6 +30,12 @@ class CertificateHandler{
     std::string getEndingDate();
     uint8_t getKeyExponent();
     uint16_t getKeyModulus();
+    void setSerial(uint32_t &serial);
+    void setSubject(std::string &subject);
+    void setIssuer(std::string &issuer);
+    void setStartingDate(std::string &s_date);
+    void setEndingDate(std::string &e_date);
+    void setKey(Key key);
 };
 
 #endif

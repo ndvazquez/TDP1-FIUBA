@@ -10,7 +10,7 @@
 #define EXPONENT_SIZE 1
 
 Protocol::Protocol(Socket* socket) : _socket(socket){}
-
+//TODO: Validar todos los send y que devuelva int esto.
 void Protocol::sendCertificate(CertificateHandler &ch){
     uint32_t serial = htonl(ch.getSerial());
     _socket->sendMessage((char*) &serial, NUMBER_SIZE);
@@ -41,8 +41,8 @@ void Protocol::sendCertificate(CertificateHandler &ch){
     uint8_t exponent = ch.getKeyExponent();
     _socket->sendMessage((char*) &exponent, EXPONENT_SIZE);
 }
-
-CertificateHandler Protocol::receiveCertificate(){
+//TODO: Validar todos los receives y que devuelva int esto.
+void Protocol::receiveCertificate(CertificateHandler &ch){
     uint32_t serial;
     _socket->receiveMessage((char*) &serial, NUMBER_SIZE);
     serial = ntohl(serial);
@@ -78,8 +78,10 @@ CertificateHandler Protocol::receiveCertificate(){
     uint8_t exponent;
     _socket->receiveMessage((char*) &exponent, EXPONENT_SIZE);
 
-    CertificateHandler ch(serial, subject, issuer,
-     s_date, e_date, Key(exponent, modulus));
-
-    return ch;
+    ch.setSerial(serial);
+    ch.setSubject(subject);
+    ch.setIssuer(issuer);
+    ch.setStartingDate(s_date);
+    ch.setEndingDate(e_date);
+    ch.setKey(Key(exponent, modulus));
 }
