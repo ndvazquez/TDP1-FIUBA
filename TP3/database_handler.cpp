@@ -3,9 +3,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <map>
 
 void DatabaseHandler::process_line(std::string line,
-                                std::unordered_map<std::string, Key> &map){
+                                std::map<std::string, Key> &map){
     //TODO: Implementar usando un iterador, y no tocando line.
     std::string delimiter = "; ";
     size_t pos = line.find(delimiter);
