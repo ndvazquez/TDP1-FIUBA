@@ -31,14 +31,14 @@ std::string CertificateHandler::createCertificate(){
     std::string exp_hex = _to_hexadecimal(_key.getExponent(), 2);
 
     std::stringstream certificate;
-    certificate << "certificate:\n\tserial number: " << _serial << " ";
-    certificate << serial_hex << "\n\tsubject: " << _subject; 
+    certificate << "certificate:\n\tserial number: " << _serial << " (";
+    certificate << serial_hex << ")\n\tsubject: " << _subject; 
     certificate << "\n\tissuer: " << _issuer << "\n\tvalidity:\n\t\t";
     certificate << "not before: " << _s_date << "\n\t\t" << "not after: ";
     certificate << _e_date << "\n\t" << "subject public key info:\n\t\t";
-    certificate << "modulus: " << _key.getModulus() << " " ;
-    certificate << mod_hex << "\n\t\texponent: ";
-    certificate << (int) _key.getExponent() << " " << exp_hex;
+    certificate << "modulus: " << _key.getModulus() << " (" ;
+    certificate << mod_hex << ")\n\t\texponent: ";
+    certificate << (int) _key.getExponent() << " (" << exp_hex << ")";
 
     return certificate.str();
 }
