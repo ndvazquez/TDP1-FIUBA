@@ -4,7 +4,7 @@
 #include "key.h"
 
 class CertificateHandler{
-    unsigned int _serial;
+    uint32_t _serial;
     std::string _subject;
     std::string _issuer;
     std::string _s_date;
@@ -15,7 +15,7 @@ class CertificateHandler{
 
     public:
     CertificateHandler();
-    CertificateHandler(unsigned int serial, 
+    CertificateHandler(uint32_t serial, 
                             std::string subject,
                             std::string issuer,
                             std::string s_date,
@@ -23,6 +23,13 @@ class CertificateHandler{
                             Key key);
     //TODO: Implementar constructor por movimiento.
     std::string createCertificate();
+    uint32_t getSerial();
+    std::string getSubject();
+    std::string getIssuer();
+    std::string getStartingDate();
+    std::string getEndingDate();
+    uint8_t getKeyExponent();
+    uint16_t getKeyModulus();
 };
 
 #endif

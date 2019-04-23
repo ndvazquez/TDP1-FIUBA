@@ -3,7 +3,7 @@
 
 Key::Key(){}
 
-Key::Key(unsigned char exponent, unsigned short modulus) :
+Key::Key(uint8_t exponent, uint16_t modulus) :
                 _exponent(exponent),
                 _modulus(modulus){}
 
@@ -12,10 +12,10 @@ std::ostream& operator<<(std::ostream& os, const Key &key){
     return os;
 }
 
-unsigned char Key::getExponent() const {
+uint8_t Key::getExponent() const {
     return _exponent;
 }
 
-unsigned short Key::getModulus() const {
+uint16_t Key::getModulus() const {
     return _modulus;
 }

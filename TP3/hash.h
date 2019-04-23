@@ -5,7 +5,7 @@
 class Hash{
     public:
     Hash();
-    unsigned short operator() (const std::string& text);
+    uint16_t operator() (const std::string& text);
 };
 
 #endif

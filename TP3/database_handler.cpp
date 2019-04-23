@@ -13,9 +13,9 @@ void DatabaseHandler::process_line(std::string line,
     line.erase(0, pos + delimiter.length());
     pos = line.find(" ");
     std::string temp = line.substr(0, pos);
-    unsigned char exponent = std::stoi(temp);
+    uint8_t exponent = std::stoi(temp);
     line.erase(0, pos + 1);
-    unsigned short modulus = std::stoi(line);
+    uint16_t modulus = std::stoi(line);
     map[subject] = Key(exponent, modulus);
 }
 

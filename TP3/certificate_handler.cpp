@@ -5,7 +5,7 @@
 
 CertificateHandler::CertificateHandler(){}
 
-CertificateHandler::CertificateHandler(unsigned int serial, 
+CertificateHandler::CertificateHandler(uint32_t serial, 
                             std::string subject,
                             std::string issuer,
                             std::string s_date,
@@ -41,4 +41,32 @@ std::string CertificateHandler::createCertificate(){
     certificate << (int) _key.getExponent() << " " << exp_hex;
 
     return certificate.str();
+}
+
+uint32_t CertificateHandler::getSerial(){
+    return _serial;
+}
+
+uint16_t CertificateHandler::getKeyModulus(){
+    return _key.getModulus();
+}
+
+uint8_t CertificateHandler::getKeyExponent(){
+    return _key.getExponent();
+}
+
+std::string CertificateHandler::getSubject(){
+    return _subject;
+}
+
+std::string CertificateHandler::getIssuer(){
+    return _issuer;
+}
+
+std::string CertificateHandler::getStartingDate(){
+    return _s_date;
+}
+
+std::string CertificateHandler::getEndingDate(){
+    return _e_date;
 }
