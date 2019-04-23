@@ -113,13 +113,14 @@ int Socket::connectToHost(std::string host, std::string port){
     return are_we_connected ? 0 : -1;
 }
 
-int Socket::receiveMessage(char *buffer, int size){
+int Socket::receiveMessage(void *buffer, int size){
+    //TODO: Chequear este casteo del mal.
     int s = 0;
     int received = 0;
     int is_the_socket_still_valid = 1;
 
     while (received < size && is_the_socket_still_valid){
-        s = recv(this->_fd, &buffer[received], size-received, MSG_NOSIGNAL);
+        s = recv(this->_fd, &((char*)buffer)[received], size-received, MSG_NOSIGNAL);
         if (s == 0){
             if (received == 0) is_the_socket_still_valid = 0;
             break;
@@ -133,13 +134,14 @@ int Socket::receiveMessage(char *buffer, int size){
     return -1;
 }
 
-int Socket::sendMessage(char *buffer, int size){
+int Socket::sendMessage(void *buffer, int size){
+    //TODO: Chequear este casteo del mal.
     int s = 0;
     int sent = 0;
     int is_the_socket_still_valid = 1;
 
     while (sent < size && is_the_socket_still_valid){
-        s = send(this->_fd, &buffer[sent], size-sent, MSG_NOSIGNAL);
+        s = send(this->_fd, &((char*)buffer)[sent], size-sent, MSG_NOSIGNAL);
         if (s == 0){
             is_the_socket_still_valid = 0;
         } else if (s < 0){

@@ -16,8 +16,8 @@ class Socket{
     int bindAndListen(std::string host, std::string port);
     int connectToHost(std::string host, std::string port);
     Socket* acceptPeer();
-    int receiveMessage(char *buffer, int size);
-    int sendMessage(char *buffer, int size);
+    int receiveMessage(void *buffer, int size);
+    int sendMessage(void *buffer, int size);
 };
 
 #endif
