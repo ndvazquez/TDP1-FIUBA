@@ -6,10 +6,6 @@
 #include <string>
 #include <memory>
 
-#define NUMBER_SIZE 4
-#define MODULUS_SIZE 2
-#define EXPONENT_SIZE 1
-
 Protocol::Protocol(Socket* socket) : _socket(socket){}
 //TODO: Validar todos los send y que devuelva int esto.
 void Protocol::sendCertificate(CertificateHandler &ch){
@@ -85,4 +81,15 @@ void Protocol::receiveCertificate(CertificateHandler &ch){
     ch.setStartingDate(s_date);
     ch.setEndingDate(e_date);
     ch.setKey(Key(exponent, modulus));
+}
+
+void Protocol::sendFingerPrint(uint32_t fingerPrint){
+    uint32_t be_fp = htonl(fingerPrint);
+    _socket->sendMessage(&be_fp, NUMBER_SIZE);
+}
+
+void Protocol::receiveFingerPrint(uint32_t *fingerPrint){
+    uint32_t be_fp;
+    _socket->receiveMessage(&be_fp, NUMBER_SIZE);
+    *fingerPrint = ntohl(be_fp);
 }
