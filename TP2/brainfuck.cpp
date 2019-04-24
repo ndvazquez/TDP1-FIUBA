@@ -114,6 +114,7 @@ void Brainfuck::run(){
                 closingBracket();
                 break;
             default:
+                std::cerr << "{" << *_ip << "}" << "no es un comando válido\n";
                 break;
         }
         ++_ip;
