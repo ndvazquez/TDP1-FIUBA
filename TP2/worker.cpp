@@ -5,7 +5,7 @@
 Worker::Worker(PriorityQueueProtected &pq) : _pq(pq){}
 void Worker::run(){
     bool keep_working = true;
-    while(keep_working){    
+    while (keep_working){    
         ScriptContainer sc = _pq.pop();
         if (sc.isValid()){
             Brainfuck brainfuck(sc);

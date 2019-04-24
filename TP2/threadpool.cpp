@@ -4,6 +4,7 @@
 #include "priority_queue_protected.h"
 #include <vector>
 #include <iostream>
+#include <string>
 
 Threadpool::Threadpool(int numberOfThreads):_numberOfThreads(numberOfThreads){
     this->_threads.reserve(_numberOfThreads);

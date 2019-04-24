@@ -6,15 +6,22 @@ Tokenizer::Tokenizer(){}
 
 std::vector<std::string> Tokenizer::tokenize(std::string line){
     std::vector<std::string> strings;
-    std::string delimiter = ", ";
+    size_t tokenLength = 0;
     size_t pos = 0;
     std::string token;
     strings.reserve(5);
-    while ((pos = line.find(delimiter)) != std::string::npos){
-        token = line.substr(0, pos);
-        strings.push_back(std::move(token));
-        line.erase(0, pos + delimiter.length());
+    std::string::iterator it;
+    for (it = line.begin(); it != line.end(); ++it){
+        if (*it == ',' && *(it+1) == ' '){
+            token = line.substr(pos+1, tokenLength-1);
+            strings.push_back(token);
+            pos += tokenLength + 1;
+            tokenLength = 0;
+        } else{
+            ++tokenLength;
+        }
     }
-    strings.push_back(line);
+    token = line.substr(pos+1, tokenLength-1);
+    strings.push_back(token);
     return strings;
 }

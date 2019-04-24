@@ -7,6 +7,7 @@
 #include <fstream>
 
 class Brainfuck{
+    //This implementation uses a fixed size data array of 30000 elements.
     static const int _size = 30000;
     char _array[_size];
     char *_dp;

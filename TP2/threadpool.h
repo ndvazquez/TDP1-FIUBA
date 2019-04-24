@@ -12,7 +12,7 @@ class Threadpool{
     PriorityQueueProtected _pq;
 
     public:
-    Threadpool(int numberOfThreads);
+    explicit Threadpool(int numberOfThreads);
     ~Threadpool();
     void run();
 };
