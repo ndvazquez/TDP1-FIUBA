@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#include "interpreter.h"
+#include "brainfuck.h"
 #include "tokenizer.h"
 #include "worker.h"
 #include "priority_queue_protected.h"
@@ -26,8 +26,8 @@ int main(int argc, char **argv){
         std::string buffer(file_size, '\0');
         file.read(&buffer[0], file_size);
         file.close();
-        Interpreter interpreter(std::move(buffer));
-        interpreter.run();
+        Brainfuck brainfuck(std::move(buffer));
+        brainfuck.run();
     }
     if (strcmp(argv[1], "thread-pool") == 0){
         int numberOfThreads = atoi(argv[2]);

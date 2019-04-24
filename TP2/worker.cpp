@@ -1,5 +1,5 @@
 #include "worker.h"
-#include "interpreter.h"
+#include "brainfuck.h"
 #include "script_container.h"
 
 Worker::Worker(PriorityQueueProtected &pq) : _pq(pq){}
@@ -8,8 +8,8 @@ void Worker::run(){
     while(keep_working){    
         ScriptContainer sc = _pq.pop();
         if (sc.isValid()){
-            Interpreter interpreter(sc);
-            interpreter.run();
+            Brainfuck brainfuck(sc);
+            brainfuck.run();
         } else {
             keep_working = false;
         }

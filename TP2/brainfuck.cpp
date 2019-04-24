@@ -1,16 +1,16 @@
-#include "interpreter.h"
+#include "brainfuck.h"
 #include <iostream>
 #include <cstring>
 #include <string>
 
-Interpreter::Interpreter(std::string &&script_buffer){
+Brainfuck::Brainfuck(std::string &&script_buffer){
     memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
     this->_script = script_buffer;
     this->_ip = _script.begin();
 }
 
-Interpreter::Interpreter(ScriptContainer sc){
+Brainfuck::Brainfuck(ScriptContainer sc){
     memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
     this->_script = std::move(sc.getScript());
@@ -19,7 +19,7 @@ Interpreter::Interpreter(ScriptContainer sc){
     this->_inputStream.open(sc.getInputFile());
 }
 
-Interpreter::~Interpreter(){
+Brainfuck::~Brainfuck(){
     if (this->_outputStream.is_open()){
         this->_outputStream.close();
     }
@@ -28,25 +28,25 @@ Interpreter::~Interpreter(){
     }
 }
 
-void Interpreter::increaseDataPointer(){
+void Brainfuck::increaseDataPointer(){
     if (_dp == _array+_size) return;   
     _dp += 1;
 }
 
-void Interpreter::decreaseDataPointer(){
+void Brainfuck::decreaseDataPointer(){
     if (_dp == _array) return; 
     _dp -= 1;
 }
 
-void Interpreter::increaseDataValue(){
+void Brainfuck::increaseDataValue(){
     *_dp += 1;
 }
 
-void Interpreter::decreaseDataValue(){
+void Brainfuck::decreaseDataValue(){
     *_dp -= 1;
 }
 
-void Interpreter::printDataValue(){
+void Brainfuck::printDataValue(){
     if (_outputStream.is_open()){
         _outputStream << *_dp;
     } else{
@@ -54,7 +54,7 @@ void Interpreter::printDataValue(){
     }
 }
 
-void Interpreter::readDataValue(){
+void Brainfuck::readDataValue(){
     char c;
     std::istream& is = _inputStream.is_open() ? _inputStream : std::cin;
     is.get(c);
@@ -65,7 +65,7 @@ void Interpreter::readDataValue(){
     }
 }
 
-void Interpreter::openingBracket(){
+void Brainfuck::openingBracket(){
     if (*_dp){
         _stack.push(_ip);
     } else {
@@ -78,7 +78,7 @@ void Interpreter::openingBracket(){
     }
 }
 
-void Interpreter::closingBracket(){;
+void Brainfuck::closingBracket(){;
     if (*_dp){
         _ip = _stack.top();
     } else {
@@ -86,7 +86,7 @@ void Interpreter::closingBracket(){;
     }
 }
 
-void Interpreter::run(){    
+void Brainfuck::run(){    
     while (*_ip){
         switch (*_ip){
             case '>':

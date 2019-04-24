@@ -1,12 +1,12 @@
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef BRAINFUCK_H
+#define BRAINFUCK_H
 
 #include "script_container.h"
 #include <stack>
 #include <string>
 #include <fstream>
 
-class Interpreter{
+class Brainfuck{
     static const int _size = 30000;
     char _array[_size];
     char *_dp;
@@ -27,9 +27,9 @@ class Interpreter{
     void closingBracket();
 
     public:
-    explicit Interpreter(std::string &&script_buffer);
-    explicit Interpreter(ScriptContainer sc);
-    ~Interpreter();
+    explicit Brainfuck(std::string &&script_buffer);
+    explicit Brainfuck(ScriptContainer sc);
+    ~Brainfuck();
     void run();
 };
 
