@@ -2,9 +2,7 @@
 #include "script_container.h"
 #include <mutex>
 
-PriorityQueueProtected::PriorityQueueProtected(){
-    _finished = false;
-}
+PriorityQueueProtected::PriorityQueueProtected(){}
 
 void PriorityQueueProtected::push(ScriptContainer sc){
     std::unique_lock<std::mutex> _lock(_mtx);
@@ -14,27 +12,10 @@ void PriorityQueueProtected::push(ScriptContainer sc){
 
 ScriptContainer PriorityQueueProtected::pop(){
     std::unique_lock<std::mutex> _lock(_mtx);
-    ScriptContainer sc;
-    while (isEmpty() && !isFinished()){
+    while (_pq.empty()){
         _cv.wait(_lock);
     }
-    if (!isEmpty()){
-        sc = _pq.top();
-        _pq.pop();
-    }
+    ScriptContainer sc = _pq.top();
+    _pq.pop();
     return sc;
-}
-
-bool PriorityQueueProtected::isEmpty(){
-    return _pq.empty();
-}
-
-bool PriorityQueueProtected::isFinished(){
-    return _finished;
-}
-
-void PriorityQueueProtected::finish(){
-    std::unique_lock<std::mutex> _lock(_mtx);
-    _finished = true;
-    _cv.notify_all();
 }

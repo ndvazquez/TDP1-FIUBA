@@ -1,10 +1,10 @@
 #include "script_container.h"
 #include <string>
 
-ScriptContainer::ScriptContainer(): _isValid(false){}
+ScriptContainer::ScriptContainer(): _priority(__INT_MAX__), _isValid(false){}
 
 ScriptContainer::ScriptContainer(
-        std::string &&priority,
+        int priority,
         std::string &&input,
         std::string &&output,
         std::string &&script) :
@@ -15,9 +15,10 @@ ScriptContainer::ScriptContainer(
         _isValid(true){
 }
 
-std::string &ScriptContainer::getPriority(){
+int ScriptContainer::getPriority(){
     return _priority;
 }
+
 std::string &ScriptContainer::getInputFile(){
     return _inputFile;
 }

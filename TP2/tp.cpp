@@ -30,28 +30,8 @@ int main(int argc, char **argv){
         interpreter.run();
     }
     if (strcmp(argv[1], "thread-pool") == 0){
-        PriorityQueueProtected pq;
         int numberOfThreads = atoi(argv[2]);
-        Threadpool threadpool(numberOfThreads, pq);
-        threadpool.run();
-        Tokenizer tokenizer;
-        std::string line;
-        while (getline(std::cin, line, ')')){
-            if (!std::cin.good()) {
-                continue;
-                }
-            std::vector<std::string> strings = tokenizer.tokenize(line);
-            ScriptContainer sc(
-                std::move(strings[1]),
-                std::move(strings[2]),
-                std::move(strings[3]),
-                std::move(strings[4])); 
-            pq.push(sc);
-        }
-        while (!pq.isFinished()){
-            if (pq.isEmpty()){
-                pq.finish();
-            } 
-        }    
+        Threadpool threadpool(numberOfThreads);
+        threadpool.run();  
     }
 }

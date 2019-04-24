@@ -5,7 +5,7 @@
 #include <string>
 
 class ScriptContainer{
-    std::string _priority;
+    int _priority;
     std::string _inputFile;
     std::string _outputFile;
     std::string _script;
@@ -13,21 +13,20 @@ class ScriptContainer{
 
     public:
     ScriptContainer();
-    ScriptContainer(std::string &&priority,
+    ScriptContainer(int priority,
                     std::string &&input,
                     std::string &&output,
                     std::string &&script);
-    std::string &getPriority();
+    int getPriority();
     std::string &getInputFile();
     std::string &getOutputFile();
     std::string &getScript(); 
     bool isValid();
-    bool compare(ScriptContainer sc);
 };
 
 struct scCompare{
     bool operator()(ScriptContainer sc1, ScriptContainer sc2){
-        return sc1.getPriority().compare(sc2.getPriority()) >= 0;
+        return sc1.getPriority() >= sc2.getPriority();
     }
 };
 

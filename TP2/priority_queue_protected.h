@@ -11,15 +11,11 @@ class PriorityQueueProtected{
         std::vector<ScriptContainer>, scCompare> _pq;
     std::condition_variable _cv;
     std::mutex _mtx;
-    bool _finished;
 
     public:
     PriorityQueueProtected();
     ScriptContainer pop();
     void push(ScriptContainer sc);
-    bool isEmpty();
-    bool isFinished();
-    void finish();
 };
 
 #endif
