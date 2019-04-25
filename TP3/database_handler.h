@@ -18,6 +18,7 @@ class DatabaseHandler{
     bool lookup(std::string &subject) const;
     void remove(const std::string &subject);
     int getNextId() const;
+    Key getPublicKey(std::string &subject);
 };
 
 #endif

@@ -59,3 +59,7 @@ void DatabaseHandler::remove(const std::string &subject){
 int DatabaseHandler::getNextId() const{
     return this->_next_id;
 }
+
+Key DatabaseHandler::getPublicKey(std::string &subject){
+    return _clients[subject];
+}

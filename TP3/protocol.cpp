@@ -7,73 +7,74 @@
 #include <memory>
 
 Protocol::Protocol(Socket* socket) : _socket(socket){}
-//TODO: Validar todos los send y que devuelva int esto.
-void Protocol::sendCertificate(CertificateHandler &ch){
-    uint32_t serial = htonl(ch.getSerial());
-    _socket->sendMessage(&serial, NUMBER_SIZE);
-    
-    std::string subject = ch.getSubject();
-    uint32_t subject_size = htonl(subject.size());
-    _socket->sendMessage(&subject_size, NUMBER_SIZE);
-    _socket->sendMessage(&subject[0], subject.size());
 
-    std::string issuer = ch.getIssuer();
-    uint32_t issuer_size = htonl(issuer.size());
-    _socket->sendMessage(&issuer_size, NUMBER_SIZE);
-    _socket->sendMessage(&issuer[0], issuer.size());
-
-    std::string s_date = ch.getStartingDate();
-    uint32_t s_date_size = htonl(s_date.size());
-    _socket->sendMessage(&s_date_size, NUMBER_SIZE);
-    _socket->sendMessage(&s_date[0], s_date.size());
-
-    std::string e_date = ch.getEndingDate();
-    uint32_t e_date_size = htonl(e_date.size());
-    _socket->sendMessage(&e_date_size, NUMBER_SIZE);
-    _socket->sendMessage(&e_date[0], e_date.size());
-
-    uint16_t modulus = htons(ch.getKeyModulus());
-    _socket->sendMessage(&modulus, MODULUS_SIZE);
-
-    uint8_t exponent = ch.getKeyExponent();
-    _socket->sendMessage(&exponent, EXPONENT_SIZE);
+void Protocol::_sendUnsignedInteger(uint32_t number){
+    uint32_t n_number = htonl(number);
+    _socket->sendMessage(&n_number, NUMBER_SIZE);
 }
-//TODO: Validar todos los receives y que devuelva int esto.
+
+void Protocol::_sendString(std::string stringToSend){
+    uint32_t string_size = htonl(stringToSend.size());
+    _socket->sendMessage(&string_size, NUMBER_SIZE);
+    _socket->sendMessage(&stringToSend[0], stringToSend.size());
+}
+
+void Protocol::_sendUnsignedShort(uint16_t number){
+    uint16_t n_number = htons(number);
+    _socket->sendMessage(&n_number, MODULUS_SIZE);
+}
+
+void Protocol::sendByte(uint8_t byte){
+    _socket->sendMessage(&byte, EXPONENT_SIZE);
+}
+
+std::string Protocol::_receiveString(){
+    uint32_t string_size;
+    _socket->receiveMessage(&string_size, NUMBER_SIZE);
+    string_size = ntohl(string_size);
+    std::string receivedString(string_size, '\0');
+    _socket->receiveMessage(&receivedString[0], string_size);
+    return receivedString;
+}
+
+uint32_t Protocol::_receiveUnsignedInteger(){
+    uint32_t number;
+    _socket->receiveMessage(&number, NUMBER_SIZE);
+    number = ntohl(number);
+    return number;
+}
+
+uint16_t Protocol::_receiveUnsignedShort(){
+    uint16_t number;
+    _socket->receiveMessage(&number, MODULUS_SIZE);
+    number = ntohs(number);
+    return number;
+}
+
+uint8_t Protocol::receiveByte(){
+    uint8_t number;
+    _socket->receiveMessage(&number, EXPONENT_SIZE);
+    return number;
+}
+
+void Protocol::sendCertificate(CertificateHandler &ch){
+    _sendUnsignedInteger(ch.getSerial());
+    _sendString(ch.getSubject());
+    _sendString(ch.getIssuer());
+    _sendString(ch.getStartingDate());
+    _sendString(ch.getEndingDate());
+    _sendUnsignedShort(ch.getKeyModulus());
+    sendByte(ch.getKeyExponent());
+}
+
 void Protocol::receiveCertificate(CertificateHandler &ch){
-    uint32_t serial;
-    _socket->receiveMessage(&serial, NUMBER_SIZE);
-    serial = ntohl(serial);
-
-    uint32_t subject_size;
-    _socket->receiveMessage(&subject_size, NUMBER_SIZE);
-    subject_size = ntohl(subject_size);
-    std::string subject(subject_size + 1, '\0');
-    _socket->receiveMessage(&subject[0], subject_size);
-
-    uint32_t issuer_size;
-    _socket->receiveMessage(&issuer_size, NUMBER_SIZE);
-    issuer_size = ntohl(issuer_size);
-    std::string issuer(issuer_size + 1, '\0');
-    _socket->receiveMessage(&issuer[0], issuer_size);
-
-    uint32_t s_date_size;
-    _socket->receiveMessage(&s_date_size, NUMBER_SIZE);
-    s_date_size = ntohl(s_date_size);
-    std::string s_date(s_date_size + 1, '\0');
-    _socket->receiveMessage(&s_date[0], s_date_size);
-
-    uint32_t e_date_size;
-    _socket->receiveMessage(&e_date_size, NUMBER_SIZE);
-    e_date_size = ntohl(e_date_size);
-    std::string e_date(e_date_size + 1, '\0');
-    _socket->receiveMessage(&e_date[0], e_date_size);
-
-    uint16_t modulus;
-    _socket->receiveMessage(&modulus, MODULUS_SIZE);
-    modulus = ntohs(modulus);
-
-    uint8_t exponent;
-    _socket->receiveMessage(&exponent, EXPONENT_SIZE);
+    uint32_t serial = _receiveUnsignedInteger();
+    std::string subject = _receiveString();
+    std::string issuer = _receiveString();
+    std::string s_date = _receiveString();
+    std::string e_date = _receiveString();
+    uint16_t modulus = _receiveUnsignedShort();
+    uint8_t exponent = receiveByte();
 
     ch.setSerial(serial);
     ch.setSubject(subject);
@@ -84,12 +85,34 @@ void Protocol::receiveCertificate(CertificateHandler &ch){
 }
 
 void Protocol::sendFingerPrint(uint32_t fingerPrint){
-    uint32_t be_fp = htonl(fingerPrint);
-    _socket->sendMessage(&be_fp, NUMBER_SIZE);
+    _sendUnsignedInteger(fingerPrint);
 }
 
 void Protocol::receiveFingerPrint(uint32_t *fingerPrint){
-    uint32_t be_fp;
-    _socket->receiveMessage(&be_fp, NUMBER_SIZE);
-    *fingerPrint = ntohl(be_fp);
+    uint32_t be_fp = _receiveUnsignedInteger();
+    *fingerPrint = be_fp;
+}
+
+void Protocol::sendNewCertificateData(std::string subject,
+                                std::string s_date,
+                                std::string e_date,
+                                Key publicKey){
+    _sendString(subject);
+    _sendUnsignedShort(publicKey.getModulus());
+    sendByte(publicKey.getExponent());
+    _sendString(s_date);
+    _sendString(e_date);
+}
+
+void Protocol::receiveNewCertificateData(CertificateHandler &ch){
+    std::string subject = _receiveString();
+    uint16_t modulus = _receiveUnsignedShort();
+    uint8_t exponent = receiveByte();
+    std::string s_date = _receiveString();
+    std::string e_date = _receiveString();
+
+    ch.setSubject(subject);
+    ch.setStartingDate(s_date);
+    ch.setEndingDate(e_date);
+    ch.setKey(Key(exponent, modulus));
 }
