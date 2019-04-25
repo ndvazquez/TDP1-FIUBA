@@ -6,54 +6,56 @@
 #include <string>
 #include <memory>
 
-Protocol::Protocol(Socket* socket) : _socket(socket){}
+Protocol::Protocol(Socket &socket){
+    this->_socket = std::move(socket);
+}
 
 void Protocol::_sendUnsignedInteger(uint32_t number){
     uint32_t n_number = htonl(number);
-    _socket->sendMessage(&n_number, NUMBER_SIZE);
+    _socket.sendMessage(&n_number, NUMBER_SIZE);
 }
 
 void Protocol::_sendString(std::string stringToSend){
     uint32_t string_size = htonl(stringToSend.size());
-    _socket->sendMessage(&string_size, NUMBER_SIZE);
-    _socket->sendMessage(&stringToSend[0], stringToSend.size());
+    _socket.sendMessage(&string_size, NUMBER_SIZE);
+    _socket.sendMessage(&stringToSend[0], stringToSend.size());
 }
 
 void Protocol::_sendUnsignedShort(uint16_t number){
     uint16_t n_number = htons(number);
-    _socket->sendMessage(&n_number, MODULUS_SIZE);
+    _socket.sendMessage(&n_number, MODULUS_SIZE);
 }
 
 void Protocol::sendByte(uint8_t byte){
-    _socket->sendMessage(&byte, EXPONENT_SIZE);
+    _socket.sendMessage(&byte, EXPONENT_SIZE);
 }
 
 std::string Protocol::_receiveString(){
     uint32_t string_size;
-    _socket->receiveMessage(&string_size, NUMBER_SIZE);
+    _socket.receiveMessage(&string_size, NUMBER_SIZE);
     string_size = ntohl(string_size);
     std::string receivedString(string_size, '\0');
-    _socket->receiveMessage(&receivedString[0], string_size);
+    _socket.receiveMessage(&receivedString[0], string_size);
     return receivedString;
 }
 
 uint32_t Protocol::_receiveUnsignedInteger(){
     uint32_t number;
-    _socket->receiveMessage(&number, NUMBER_SIZE);
+    _socket.receiveMessage(&number, NUMBER_SIZE);
     number = ntohl(number);
     return number;
 }
 
 uint16_t Protocol::_receiveUnsignedShort(){
     uint16_t number;
-    _socket->receiveMessage(&number, MODULUS_SIZE);
+    _socket.receiveMessage(&number, MODULUS_SIZE);
     number = ntohs(number);
     return number;
 }
 
 uint8_t Protocol::receiveByte(){
     uint8_t number;
-    _socket->receiveMessage(&number, EXPONENT_SIZE);
+    _socket.receiveMessage(&number, EXPONENT_SIZE);
     return number;
 }
 

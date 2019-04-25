@@ -17,10 +17,10 @@ class Protocol{
     uint16_t _receiveUnsignedShort();
     
     protected:
-    std::unique_ptr<Socket> _socket;
+    Socket _socket;
 
     public:
-    Protocol(Socket* socket);
+    Protocol(Socket &socket);
     void sendFingerPrint(uint32_t fingerPrint);
     void receiveFingerPrint(uint32_t *fingerPrint);
     void receiveCertificate(CertificateHandler &ch);

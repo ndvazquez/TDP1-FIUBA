@@ -40,6 +40,19 @@ Socket::Socket(){
 
 Socket::Socket(int fileDescriptor) : _fd(fileDescriptor){}
 
+Socket::Socket(Socket&& other){
+    *this = std::move(other);
+}
+
+Socket& Socket::operator=(Socket&& other){
+    if (this == &other){
+        return *this;
+    }
+    this->_fd = other._fd;
+    other._fd = -1;
+    return *this;
+}
+
 Socket::~Socket(){
     if (this->_fd != -1){
         shutdown(this->_fd, SHUT_RDWR);
@@ -122,7 +135,6 @@ int Socket::receiveMessage(void *buffer, int size){
     while (received < size && is_the_socket_still_valid){
         s = recv(this->_fd, &((char*)buffer)[received], size-received, MSG_NOSIGNAL);
         if (s == 0){
-            if (received == 0) is_the_socket_still_valid = 0;
             break;
         } else if (s < 0){
             is_the_socket_still_valid = 0;
@@ -154,11 +166,11 @@ int Socket::sendMessage(void *buffer, int size){
     return -1;
 }
 
-Socket* Socket::acceptPeer(){
+Socket Socket::acceptPeer(){
     int peer_fd = accept(this->_fd, NULL, NULL);
-    if (peer_fd == -1){
-        return nullptr;
-    }
-    Socket* peer_socket = new Socket(peer_fd);
-    return peer_socket;
+    return std::move(Socket(peer_fd));
+}
+
+bool Socket::isValid(){
+    return this->_fd != -1;
 }
