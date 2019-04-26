@@ -10,13 +10,13 @@ CertificateHandler::CertificateHandler(uint32_t serial,
                             std::string issuer,
                             std::string s_date,
                             std::string e_date,
-                            Key key) :
+                            Key &key) :
                             _serial(serial),
                             _subject(subject),
                             _issuer(issuer),
                             _s_date(s_date),
                             _e_date(e_date),
-                            _key(key){}
+                            _key(std::move(key)){}
 
 std::string CertificateHandler::_to_hexadecimal(int number, int width){
     std::stringstream result;
@@ -88,5 +88,5 @@ void CertificateHandler::setEndingDate(std::string &e_date){
     this->_e_date = e_date;
 }
 void CertificateHandler::setKey(Key key){
-    this->_key = key;
+    this->_key = std::move(key);
 }

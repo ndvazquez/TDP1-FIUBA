@@ -20,7 +20,7 @@ class CertificateHandler{
                             std::string issuer,
                             std::string s_date,
                             std::string e_date,
-                            Key key);
+                            Key &key);
     //TODO: Implementar constructor por movimiento.
     std::string createCertificate();
     uint32_t getSerial();

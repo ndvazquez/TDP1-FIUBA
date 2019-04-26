@@ -20,6 +20,8 @@ void DatabaseHandler::process_line(std::string line,
     map[subject] = Key(exponent, modulus);
 }
 
+DatabaseHandler::DatabaseHandler(){}
+
 DatabaseHandler::DatabaseHandler(std::string dbPath) : _databasePath(dbPath){
     std::ifstream database;
     database.open(this->_databasePath);
@@ -43,8 +45,8 @@ DatabaseHandler::~DatabaseHandler(){
     }
 }
 
-void DatabaseHandler::insert(const std::string &subject, const Key &publicKey){
-    this->_clients[subject] = publicKey;
+void DatabaseHandler::insert(const std::string &subject, Key &publicKey){
+    this->_clients[subject] = std::move(publicKey);
     ++this->_next_id;
 }
 

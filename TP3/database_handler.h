@@ -12,9 +12,10 @@ class DatabaseHandler{
                             std::map<std::string, Key> &map);
 
     public:
-    DatabaseHandler(std::string databasePath);
+    DatabaseHandler();
+    explicit DatabaseHandler(std::string databasePath);
     ~DatabaseHandler();
-    void insert(const std::string &subject, const Key &publicKey);
+    void insert(const std::string &subject, Key &publicKey);
     bool lookup(std::string &subject) const;
     void remove(const std::string &subject);
     int getNextId() const;
