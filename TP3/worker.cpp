@@ -5,6 +5,7 @@
 #include "encrypter.h"
 #include "protocol.h"
 #include "certificate_handler.h"
+#include <iostream>
 
 Worker::Worker(DatabaseHandler &db, Socket &socket, Key &key):
                 _database(db),
@@ -12,14 +13,19 @@ Worker::Worker(DatabaseHandler &db, Socket &socket, Key &key):
                 _serverPrivateKey(key){}
 
 void Worker::run(){
-    Protocol protocol(_peerSocket);
-    uint8_t action = protocol.receiveByte();
-    if (action == 0){
-        newCertificate(protocol);
-    } else if (action == 1){
-        revoke(protocol);
-    }
-    _isDead = true;
+    try{
+        Protocol protocol(_peerSocket);
+        uint8_t action = protocol.receiveByte();
+        if (action == 0){
+            newCertificate(protocol);
+        } else if (action == 1){
+            revoke(protocol);
+        }
+        _isDead = true;
+    } catch (...){
+        _isDead = true;
+        std::cout << "Something went wrong.\n";
+    }    
 }
 
 void Worker::stop(){

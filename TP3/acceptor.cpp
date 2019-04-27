@@ -17,6 +17,7 @@ void Acceptor::run(){
             if (_workers[i]->isDead()){
                 _workers[i]->join();
                 delete _workers[i];
+                _workers.erase(_workers.begin() + i);
             }
         }
     }

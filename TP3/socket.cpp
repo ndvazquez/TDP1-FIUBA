@@ -137,6 +137,8 @@ int Socket::receiveMessage(void *buffer, int size){
         if (s == 0){
             break;
         } else if (s < 0){
+            //TODO: Crear una excepcion real.
+            throw "Explotó todo\n";
             is_the_socket_still_valid = 0;
         } else{
             received += s;
@@ -157,6 +159,8 @@ int Socket::sendMessage(void *buffer, int size){
         if (s == 0){
             is_the_socket_still_valid = 0;
         } else if (s < 0){
+            //TODO: Crear una excepcion real.
+            throw "Explotó todo\n";
             is_the_socket_still_valid = 0;
         } else{
             sent += s;
