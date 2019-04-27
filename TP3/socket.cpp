@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string>
+#include <stdexcept>
 #include "socket.h"
 
 int Socket::_wrapperGetAddrinfo(std::string host, std::string port,
@@ -127,7 +128,6 @@ int Socket::connectToHost(std::string host, std::string port){
 }
 
 int Socket::receiveMessage(void *buffer, int size){
-    //TODO: Chequear este casteo del mal.
     int s = 0;
     int received = 0;
     int is_the_socket_still_valid = 1;
@@ -138,7 +138,7 @@ int Socket::receiveMessage(void *buffer, int size){
             break;
         } else if (s < 0){
             //TODO: Crear una excepcion real.
-            throw "Explotó todo\n";
+            throw std::runtime_error("Connection lost.\n");
             is_the_socket_still_valid = 0;
         } else{
             received += s;
@@ -149,7 +149,6 @@ int Socket::receiveMessage(void *buffer, int size){
 }
 
 int Socket::sendMessage(void *buffer, int size){
-    //TODO: Chequear este casteo del mal.
     int s = 0;
     int sent = 0;
     int is_the_socket_still_valid = 1;
@@ -160,7 +159,7 @@ int Socket::sendMessage(void *buffer, int size){
             is_the_socket_still_valid = 0;
         } else if (s < 0){
             //TODO: Crear una excepcion real.
-            throw "Explotó todo\n";
+            throw std::runtime_error("Connection lost.\n");
             is_the_socket_still_valid = 0;
         } else{
             sent += s;
