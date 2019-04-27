@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <string>
 #include <stdexcept>
-#include "socket.h"
+#include "common_socket.h"
 
 int Socket::_wrapperGetAddrinfo(std::string host, std::string port,
                                 struct addrinfo **ptr,

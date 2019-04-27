@@ -1,8 +1,8 @@
 #ifndef SERVER_H
 #define SERVER_h
-#include "key.h"
-#include "database_handler.h"
-#include "socket.h"
+#include "common_key.h"
+#include "server_database_handler.h"
+#include "common_socket.h"
 #include <string>
 
 class Server{

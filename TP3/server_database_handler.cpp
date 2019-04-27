@@ -1,5 +1,5 @@
-#include "database_handler.h"
-#include "key.h"
+#include "server_database_handler.h"
+#include "common_key.h"
 #include <fstream>
 #include <iostream>
 #include <string>

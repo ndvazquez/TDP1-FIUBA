@@ -1,11 +1,11 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include "database_handler.h"
-#include "socket.h"
-#include "thread.h"
-#include "protocol.h"
-#include "key.h"
+#include "server_database_handler.h"
+#include "common_socket.h"
+#include "server_thread.h"
+#include "common_protocol.h"
+#include "common_key.h"
 
 class Worker : public Thread{
     DatabaseHandler &_database;

@@ -1,5 +1,5 @@
-#include "acceptor.h"
-#include "worker.h"
+#include "server_acceptor.h"
+#include "server_worker.h"
 
 Acceptor::Acceptor(DatabaseHandler &db, Socket &socket, Key &key):
                 _database(db),

@@ -1,5 +1,5 @@
-#include "certificate_handler.h"
-#include "key.h"
+#include "common_certificate_handler.h"
+#include "common_key.h"
 #include <string>
 #include <iomanip>
 #include <sstream>

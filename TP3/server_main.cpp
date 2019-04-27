@@ -1,6 +1,6 @@
-#include "server.h"
-#include "key.h"
-#include "database_handler.h"
+#include "server_server.h"
+#include "common_key.h"
+#include "server_database_handler.h"
 #include <vector>
 #include <fstream>
 

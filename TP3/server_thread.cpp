@@ -1,4 +1,4 @@
-#include "thread.h"
+#include "server_thread.h"
 
 Thread::Thread() : _isDead(false) {}
 

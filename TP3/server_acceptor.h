@@ -1,9 +1,9 @@
 #ifndef ACCEPTOR_H
 #define ACCEPTOR_H
-#include "thread.h"
-#include "socket.h"
-#include "database_handler.h"
-#include "key.h"
+#include "server_thread.h"
+#include "common_socket.h"
+#include "server_database_handler.h"
+#include "common_key.h"
 #include <vector>
 
 class Acceptor : public Thread{

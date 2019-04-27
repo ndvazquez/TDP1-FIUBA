@@ -1,7 +1,7 @@
-#include "protocol.h"
-#include "socket.h"
-#include "key.h"
-#include "certificate_handler.h"
+#include "common_protocol.h"
+#include "common_socket.h"
+#include "common_key.h"
+#include "common_certificate_handler.h"
 #include <arpa/inet.h>
 #include <string>
 #include <memory>

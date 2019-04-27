@@ -1,7 +1,7 @@
 #ifndef PROTOCOL_H
 #define PROTOCOL_H
-#include "socket.h"
-#include "certificate_handler.h"
+#include "common_socket.h"
+#include "common_certificate_handler.h"
 #include <memory>
 
 #define NUMBER_SIZE 4

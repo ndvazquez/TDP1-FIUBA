@@ -1,4 +1,4 @@
-#include "hash.h"
+#include "common_hash.h"
 #include <string>
 
 Hash::Hash(){}

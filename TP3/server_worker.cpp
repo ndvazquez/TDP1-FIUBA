@@ -1,10 +1,10 @@
-#include "worker.h"
-#include "database_handler.h"
-#include "socket.h"
-#include "hash.h"
-#include "encrypter.h"
-#include "protocol.h"
-#include "certificate_handler.h"
+#include "server_worker.h"
+#include "server_database_handler.h"
+#include "common_socket.h"
+#include "common_hash.h"
+#include "common_encrypter.h"
+#include "common_protocol.h"
+#include "common_certificate_handler.h"
 #include <iostream>
 #include <stdexcept>
 

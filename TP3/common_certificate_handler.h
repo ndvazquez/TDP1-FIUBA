@@ -1,7 +1,7 @@
 #ifndef CERTIFICATE_HANDLER_H
 #define CERTIFICATE_HANDLER_H
 #include <string>
-#include "key.h"
+#include "common_key.h"
 
 class CertificateHandler{
     uint32_t _serial;

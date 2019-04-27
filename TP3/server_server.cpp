@@ -1,9 +1,9 @@
-#include "server.h"
-#include "key.h"
-#include "database_handler.h"
-#include "socket.h"
-#include "worker.h"
-#include "acceptor.h"
+#include "server_server.h"
+#include "common_key.h"
+#include "server_database_handler.h"
+#include "common_socket.h"
+#include "server_worker.h"
+#include "server_acceptor.h"
 #include <iostream>
 
 Server::Server(Key &privateKey, Key &publicKey,
