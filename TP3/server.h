@@ -3,7 +3,6 @@
 #include "key.h"
 #include "database_handler.h"
 #include "socket.h"
-#include "protocol.h"
 #include <string>
 
 class Server{
@@ -17,8 +16,9 @@ class Server{
             std::string &dbPath,
             Socket &acceptor);
     void run();
-    void revoke(Protocol &protocol);
-    void newCertificate(Protocol &protocol);
+    
+    // void revoke(Protocol &protocol);
+    // void newCertificate(Protocol &protocol);
 };
 
 #endif

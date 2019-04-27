@@ -174,3 +174,10 @@ Socket Socket::acceptPeer(){
 bool Socket::isValid(){
     return this->_fd != -1;
 }
+
+void Socket::shutdownAndClose(){
+    if (this->_fd != -1){
+        shutdown(this->_fd, SHUT_RDWR);
+        close(this->_fd);
+    }
+}

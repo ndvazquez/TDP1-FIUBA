@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <mutex>
 
 void DatabaseHandler::process_line(std::string line,
                                 std::map<std::string, Key> &map){
@@ -22,7 +23,17 @@ void DatabaseHandler::process_line(std::string line,
 
 DatabaseHandler::DatabaseHandler(){}
 
-DatabaseHandler::DatabaseHandler(std::string dbPath) : _databasePath(dbPath){
+DatabaseHandler::~DatabaseHandler(){
+    std::ofstream database;
+    database.open(this->_databasePath, std::ios::out | std::ios::trunc);
+    database << this->_next_id;
+    for (const auto& n : this->_clients) {
+        database << std::endl << n.first << "; " << n.second;
+    }
+}
+
+void DatabaseHandler::initializeData(std::string dbPath){
+    this->_databasePath = dbPath;
     std::ifstream database;
     database.open(this->_databasePath);
     if (database >> this->_next_id){
@@ -35,33 +46,28 @@ DatabaseHandler::DatabaseHandler(std::string dbPath) : _databasePath(dbPath){
         this->_next_id = 1;
     }
 }
-
-DatabaseHandler::~DatabaseHandler(){
-    std::ofstream database;
-    database.open(this->_databasePath, std::ios::out | std::ios::trunc);
-    database << this->_next_id;
-    for (const auto& n : this->_clients) {
-        database << std::endl << n.first << "; " << n.second;
-    }
-}
-
 void DatabaseHandler::insert(const std::string &subject, Key &publicKey){
+    std::unique_lock<std::mutex> _lock(_mtx);
     this->_clients[subject] = std::move(publicKey);
     ++this->_next_id;
 }
 
-bool DatabaseHandler::lookup(std::string &subject) const{
+bool DatabaseHandler::lookup(std::string &subject){
+    std::unique_lock<std::mutex> _lock(_mtx);
     return this->_clients.count(subject) > 0;
 }
 
 void DatabaseHandler::remove(const std::string &subject){
+    std::unique_lock<std::mutex> _lock(_mtx);
     this->_clients.erase(subject);
 }
 
-int DatabaseHandler::getNextId() const{
+int DatabaseHandler::getNextId(){
+    std::unique_lock<std::mutex> _lock(_mtx);
     return this->_next_id;
 }
 
 Key DatabaseHandler::getPublicKey(std::string &subject){
+    std::unique_lock<std::mutex> _lock(_mtx);
     return _clients[subject];
 }

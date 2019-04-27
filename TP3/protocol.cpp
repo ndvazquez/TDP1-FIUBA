@@ -6,9 +6,7 @@
 #include <string>
 #include <memory>
 
-Protocol::Protocol(Socket &socket){
-    this->_socket = std::move(socket);
-}
+Protocol::Protocol(Socket &socket) : _socket(socket){}
 
 void Protocol::_sendUnsignedInteger(uint32_t number){
     uint32_t n_number = htonl(number);
