@@ -2,6 +2,7 @@
 #include "key.h"
 #include <string>
 #include <iomanip>
+#include <sstream>
 
 CertificateHandler::CertificateHandler(){}
 

@@ -24,6 +24,7 @@ class Socket{
     Socket acceptPeer();
     int receiveMessage(void *buffer, int size);
     int sendMessage(void *buffer, int size);
+    void shutdownAndClose();
 };
 
 #endif

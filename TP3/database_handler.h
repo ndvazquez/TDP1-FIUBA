@@ -2,8 +2,12 @@
 #define DATABASE_HANDLER_H
 #include "key.h"
 #include <map>
+#include <mutex>
+#include <condition_variable>
 
 class DatabaseHandler{
+    std::condition_variable _cv;
+    std::mutex _mtx;
     std::map<std::string, Key> _clients;
     int _next_id;
     std::string _databasePath;
@@ -13,12 +17,12 @@ class DatabaseHandler{
 
     public:
     DatabaseHandler();
-    explicit DatabaseHandler(std::string databasePath);
     ~DatabaseHandler();
+    void initializeData(std::string dbPath);
     void insert(const std::string &subject, Key &publicKey);
-    bool lookup(std::string &subject) const;
+    bool lookup(std::string &subject);
     void remove(const std::string &subject);
-    int getNextId() const;
+    int getNextId();
     Key getPublicKey(std::string &subject);
 };
 

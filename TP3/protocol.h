@@ -17,7 +17,7 @@ class Protocol{
     uint16_t _receiveUnsignedShort();
     
     protected:
-    Socket _socket;
+    Socket &_socket;
 
     public:
     Protocol(Socket &socket);
