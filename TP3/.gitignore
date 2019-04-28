@@ -9,3 +9,5 @@ server
 client
 *.req
 *.cert
+*.py
+filter_options
