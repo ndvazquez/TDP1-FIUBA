@@ -2,6 +2,7 @@
 #define CLIENT_H
 #include "common_key.h"
 #include "common_socket.h"
+#include "common_certificate_handler.h"
 #include <string>
 class Client {
     Key _privateKey;
@@ -9,6 +10,8 @@ class Client {
     Key _serverPublicKey;
     Socket _socket;
     std::string _filePath;
+    std::string _parseLine(std::string &line);
+    CertificateHandler _createCertificateFromFile();
     public:
     Client(Key &privateKey,
             Key &publicKey,

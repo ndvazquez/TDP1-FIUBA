@@ -2,6 +2,7 @@
 #define DATABASE_HANDLER_H
 #include "common_key.h"
 #include <map>
+#include <string>
 #include <mutex>
 #include <condition_variable>
 

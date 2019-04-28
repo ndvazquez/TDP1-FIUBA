@@ -5,9 +5,9 @@
 
 class Socket{
     int _fd;
-    Socket(int fileDescriptor);
-    int _wrapperGetAddrinfo(std::string host, std::string port, struct addrinfo **ptr,
-            int passive);
+    explicit Socket(int fileDescriptor);
+    int _wrapperGetAddrinfo(std::string host, std::string port, 
+            struct addrinfo **ptr, int passive);
     int _socketCreate(int ai_family, int ai_socktype, int ai_protocol);
     public:
     Socket();

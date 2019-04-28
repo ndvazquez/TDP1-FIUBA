@@ -7,6 +7,7 @@
 #include "common_certificate_handler.h"
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 Worker::Worker(DatabaseHandler &db, Socket &socket, Key &key):
                 _database(db),

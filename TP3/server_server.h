@@ -16,9 +16,6 @@ class Server{
             std::string &dbPath,
             Socket &acceptor);
     void run();
-    
-    // void revoke(Protocol &protocol);
-    // void newCertificate(Protocol &protocol);
 };
 
 #endif

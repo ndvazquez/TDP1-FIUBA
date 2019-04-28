@@ -30,6 +30,7 @@ DatabaseHandler::~DatabaseHandler(){
     for (const auto& n : this->_clients) {
         database << std::endl << n.first << "; " << n.second;
     }
+    database << std::endl;
 }
 
 void DatabaseHandler::initializeData(std::string dbPath){

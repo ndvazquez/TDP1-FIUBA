@@ -3,6 +3,7 @@
 #include "server_database_handler.h"
 #include <vector>
 #include <fstream>
+#include <string>
 
 int main(int argc, char** argv){
     std::ifstream keyFile;
@@ -23,8 +24,12 @@ int main(int argc, char** argv){
     int status = acceptor.bindAndListen(host, service);
     if (status == -1){
         std::cout << "No se pudo bindear al socket\n";
-        return -1;
+        return 1;
     }
     Server server(privateKey, publicKey, dbPath, acceptor);
-    server.run();
+    try {
+        server.run();
+    } catch (...){
+        return 1;
+    }
 }

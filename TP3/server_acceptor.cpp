@@ -11,7 +11,9 @@ void Acceptor::run(){
     while (_keepRunning){
         Socket peerSocket = _socket.acceptPeer();
         if (!peerSocket.isValid()) continue;
-        _workers.push_back(new Worker(_database, peerSocket, _serverPrivateKey));
+        _workers.push_back(new Worker(_database, 
+                                    peerSocket, 
+                                    _serverPrivateKey));
         _workers.back()->start();
         for (size_t i = 0; i < _workers.size(); ++i){
             if (_workers[i]->isDead()){

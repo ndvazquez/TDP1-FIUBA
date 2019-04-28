@@ -37,7 +37,7 @@ std::string CertificateHandler::createCertificate(){
     certificate << "\n\tissuer: " << _issuer << "\n\tvalidity:\n\t\t";
     certificate << "not before: " << _s_date << "\n\t\t" << "not after: ";
     certificate << _e_date << "\n\t" << "subject public key info:\n\t\t";
-    certificate << "modulus: " << _key.getModulus() << " (" ;
+    certificate << "modulus: " << _key.getModulus() << " (";
     certificate << mod_hex << ")\n\t\texponent: ";
     certificate << (int) _key.getExponent() << " (" << exp_hex << ")";
 

@@ -3,6 +3,7 @@
 #include "common_socket.h"
 #include "common_certificate_handler.h"
 #include <memory>
+#include <string>
 
 #define NUMBER_SIZE 4
 #define MODULUS_SIZE 2
@@ -20,7 +21,7 @@ class Protocol{
     Socket &_socket;
 
     public:
-    Protocol(Socket &socket);
+    explicit Protocol(Socket &socket);
     void sendFingerPrint(uint32_t fingerPrint);
     void receiveFingerPrint(uint32_t *fingerPrint);
     void receiveCertificate(CertificateHandler &ch);

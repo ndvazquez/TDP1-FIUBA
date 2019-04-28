@@ -4,6 +4,7 @@
 #include "common_socket.h"
 #include "server_worker.h"
 #include "server_acceptor.h"
+#include <string>
 #include <iostream>
 
 Server::Server(Key &privateKey, Key &publicKey,
