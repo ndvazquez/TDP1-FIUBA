@@ -10,4 +10,5 @@ client
 *.req
 *.cert
 *.py
+*.zip
 filter_options
