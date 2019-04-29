@@ -4,6 +4,7 @@
 #include "script_container.h"
 #include <stack>
 #include <string>
+#include <vector>
 #include <fstream>
 
 class Brainfuck{
@@ -11,12 +12,12 @@ class Brainfuck{
     static const int _size = 30000;
     char _array[_size];
     char *_dp;
-    std::string _script;
-    std::string::iterator _ip;
+    std::vector<char> _script;
+    std::vector<char>::iterator _ip;
     std::ofstream _outputStream;
     std::ifstream _inputStream;
 
-    std::stack<std::string::iterator> _stack;
+    std::stack<std::vector<char>::iterator> _stack;
 
     void increaseDataPointer();
     void decreaseDataPointer();
@@ -28,7 +29,7 @@ class Brainfuck{
     void closingBracket();
 
     public:
-    explicit Brainfuck(std::string &&script_buffer);
+    explicit Brainfuck(std::vector<char> &&script_buffer);
     explicit Brainfuck(ScriptContainer sc);
     ~Brainfuck();
     void run();

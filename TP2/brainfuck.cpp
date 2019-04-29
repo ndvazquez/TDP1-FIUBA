@@ -1,9 +1,9 @@
 #include "brainfuck.h"
 #include <iostream>
 #include <cstring>
-#include <string>
+#include <vector>
 
-Brainfuck::Brainfuck(std::string &&script_buffer){
+Brainfuck::Brainfuck(std::vector<char> &&script_buffer){
     memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
     this->_script = script_buffer;
@@ -13,7 +13,9 @@ Brainfuck::Brainfuck(std::string &&script_buffer){
 Brainfuck::Brainfuck(ScriptContainer sc){
     memset(this->_array, 0, this->_size);
     this->_dp = this->_array;
-    this->_script = std::move(sc.getScript());
+    std::string script = sc.getScript();
+    std::vector<char> vScript(script.begin(), script.end());
+    this->_script = std::move(vScript);
     this->_ip = _script.begin();
     this->_outputStream.open(sc.getOutputFile());
     this->_inputStream.open(sc.getInputFile());
@@ -87,7 +89,7 @@ void Brainfuck::closingBracket(){;
 }
 
 void Brainfuck::run(){    
-    while (*_ip){
+    while (_ip != _script.end()){
         switch (*_ip){
             case '>':
                 increaseDataPointer();

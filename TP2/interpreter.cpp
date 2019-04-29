@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 Interpreter::Interpreter(std::string scriptPath) : _scriptPath(scriptPath){}
 
@@ -18,7 +19,7 @@ void Interpreter::run(){
     file_size = file.tellg();
     file.seekg(0, file.beg);
 
-    std::string buffer(file_size, '\0');
+    std::vector<char> buffer(file_size, '\0');
     file.read(&buffer[0], file_size);
     file.close();
     Brainfuck brainfuck(std::move(buffer));
