@@ -23,13 +23,13 @@ class CertificateHandler{
                             Key &key);
     //TODO: Implementar constructor por movimiento.
     std::string createCertificate();
-    uint32_t getSerial();
-    std::string getSubject();
-    std::string getIssuer();
-    std::string getStartingDate();
-    std::string getEndingDate();
-    uint8_t getKeyExponent();
-    uint16_t getKeyModulus();
+    uint32_t getSerial() const;
+    std::string getSubject() const;
+    std::string getIssuer() const;
+    std::string getStartingDate() const;
+    std::string getEndingDate() const;
+    uint8_t getKeyExponent() const;
+    uint16_t getKeyModulus() const;
     void setSerial(uint32_t &serial);
     void setSubject(std::string &subject);
     void setIssuer(std::string &issuer);

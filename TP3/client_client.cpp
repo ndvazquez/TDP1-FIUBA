@@ -87,17 +87,25 @@ void Client::requestCertificateCreation(){
     }
 
     Protocol protocol(_socket);
-    protocol.sendByte(0);
-    protocol.sendNewCertificateData(subject, s_date, e_date, _publicKey);
-    int new_status = protocol.receiveByte();
+    // We send all the required data to create a new cert.
+    uint8_t newCertificate = 0;
+    protocol << newCertificate;
+    protocol << subject;
+    protocol << _publicKey.getModulus();
+    protocol << _publicKey.getExponent();
+    protocol << s_date;
+    protocol << e_date;
+    
+    uint8_t new_status;
+    protocol >> new_status;
     if (new_status != 0) {
         std::cout << "Error: ya existe un certificado.\n";
         return;
     }
     CertificateHandler certificateHandler;
-    protocol.receiveCertificate(certificateHandler);
+    protocol >> certificateHandler;
     uint32_t receivedFingerprint;
-    protocol.receiveFingerPrint(&receivedFingerprint);
+    protocol >> receivedFingerprint;
     std::string cert = certificateHandler.createCertificate();
     Hash hasher;
     Encrypter encrypter;
@@ -111,7 +119,7 @@ void Client::requestCertificateCreation(){
     std::cout << "Huella del servidor: " << receivedFingerprint << std::endl;
     std::cout << "Hash del servidor: " << publicStep << std::endl;
     std::cout << "Hash calculado: " << hashed_cert << std::endl;
-    
+
     uint8_t response = publicStep == hashed_cert ? 0 : 1;
     if (response == 1){
         std::cout << "Error: los hashes no coinciden.\n";
@@ -122,7 +130,7 @@ void Client::requestCertificateCreation(){
         outputFile.open(certFileName);
         outputFile << cert;
     }
-    protocol.sendByte(response);
+    protocol << response;
 }
 
 void Client::requestCertificateRevocation(){
@@ -138,15 +146,16 @@ void Client::requestCertificateRevocation(){
     uint32_t publicStep = encrypter.rsa(privateStep,
                                         _serverPublicKey.getExponent(),
                                         _serverPublicKey.getModulus());
-    
-    protocol.sendByte(1);
-    protocol.sendCertificate(ch);
-    protocol.sendFingerPrint(publicStep);
+    uint8_t revokeCertificate = 1;
+    protocol << revokeCertificate;
+    protocol << ch;
+    protocol << publicStep;
     std::cout << "Hash calculado: " << hashed_cert << std::endl;
     std::cout << "Hash encriptado con la clave privada: ";
     std::cout << privateStep << std::endl;
     std::cout << "Huella enviada: " << publicStep << std::endl;
-    uint8_t serverResponse = protocol.receiveByte();
+    uint8_t serverResponse;
+    protocol >> serverResponse;
     if (serverResponse == 1) std::cout << "Error: usuario no registrado.\n";
     if (serverResponse == 2) std::cout << "Error: los hashes no coinciden.\n";
 }

@@ -44,31 +44,31 @@ std::string CertificateHandler::createCertificate(){
     return certificate.str();
 }
 
-uint32_t CertificateHandler::getSerial(){
+uint32_t CertificateHandler::getSerial() const{
     return _serial;
 }
 
-uint16_t CertificateHandler::getKeyModulus(){
+uint16_t CertificateHandler::getKeyModulus() const{
     return _key.getModulus();
 }
 
-uint8_t CertificateHandler::getKeyExponent(){
+uint8_t CertificateHandler::getKeyExponent() const{
     return _key.getExponent();
 }
 
-std::string CertificateHandler::getSubject(){
+std::string CertificateHandler::getSubject() const{
     return _subject;
 }
 
-std::string CertificateHandler::getIssuer(){
+std::string CertificateHandler::getIssuer() const{
     return _issuer;
 }
 
-std::string CertificateHandler::getStartingDate(){
+std::string CertificateHandler::getStartingDate() const{
     return _s_date;
 }
 
-std::string CertificateHandler::getEndingDate(){
+std::string CertificateHandler::getEndingDate() const{
     return _e_date;
 }
 

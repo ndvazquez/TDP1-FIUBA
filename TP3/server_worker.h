@@ -13,7 +13,9 @@ class Worker : public Thread{
     Key &_serverPrivateKey;
     void newCertificate(Protocol &protocol);
     void revoke(Protocol &protocol);
-    uint32_t _handleEncryption(uint32_t hashed_value, Key &clientPubKey);
+    uint32_t _handleEncryption(uint32_t hashed_value,
+                            uint8_t exponent,
+                            uint16_t modulus);
     public:
     Worker(DatabaseHandler &db, Socket &socket, Key &key);
     void run();

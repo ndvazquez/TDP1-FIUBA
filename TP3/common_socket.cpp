@@ -149,7 +149,7 @@ int Socket::receiveMessage(void *buffer, int size){
     return -1;
 }
 
-int Socket::sendMessage(void *buffer, int size){
+int Socket::sendMessage(const void *buffer, int size){
     char* cBuffer = (char*) buffer;
     int s = 0;
     int sent = 0;

@@ -23,7 +23,7 @@ class Socket{
     int connectToHost(std::string host, std::string port);
     Socket acceptPeer();
     int receiveMessage(void *buffer, int size);
-    int sendMessage(void *buffer, int size);
+    int sendMessage(const void *buffer, int size);
     void shutdownAndClose();
 };
 
