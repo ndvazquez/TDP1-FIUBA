@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <vector>
+#include <string>
 
 Brainfuck::Brainfuck(std::vector<char> &&script_buffer){
     memset(this->_array, 0, this->_size);
