@@ -1,0 +1,707 @@
+diff --git a/TP2/brainfuck.cpp b/TP2/brainfuck.cpp
+new file mode 100644
+index 0000000..75948e7
+--- /dev/null
++++ b/TP2/brainfuck.cpp
+@@ -0,0 +1,123 @@
++#include "brainfuck.h"
++#include <iostream>
++#include <cstring>
++#include <vector>
++
++Brainfuck::Brainfuck(std::vector<char> &&script_buffer){
++    memset(this->_array, 0, this->_size);
++    this->_dp = this->_array;
++    this->_script = script_buffer;
++    this->_ip = _script.begin();
++}
++
++Brainfuck::Brainfuck(ScriptContainer sc){
++    memset(this->_array, 0, this->_size);
++    this->_dp = this->_array;
++    std::string script = sc.getScript();
++    std::vector<char> vScript(script.begin(), script.end());
++    this->_script = std::move(vScript);
++    this->_ip = _script.begin();
++    this->_outputStream.open(sc.getOutputFile());
++    this->_inputStream.open(sc.getInputFile());
++}
++
++Brainfuck::~Brainfuck(){
++    if (this->_outputStream.is_open()){
++        this->_outputStream.close();
++    }
++    if (this->_inputStream.is_open()){
++        this->_inputStream.close();
++    }
++}
++
++void Brainfuck::increaseDataPointer(){
++    if (_dp == _array+_size) return;   
++    _dp += 1;
++}
++
++void Brainfuck::decreaseDataPointer(){
++    if (_dp == _array) return; 
++    _dp -= 1;
++}
++
++void Brainfuck::increaseDataValue(){
++    *_dp += 1;
++}
++
++void Brainfuck::decreaseDataValue(){
++    *_dp -= 1;
++}
++
++void Brainfuck::printDataValue(){
++    if (_outputStream.is_open()){
++        _outputStream << *_dp;
++    } else{
++        std::cout << *_dp;
++    }
++}
++
++void Brainfuck::readDataValue(){
++    char c;
++    std::istream& is = _inputStream.is_open() ? _inputStream : std::cin;
++    is.get(c);
++    if (is.eof()) {
++        *_dp = 0;
++    } else {
++        *_dp = c;
++    }
++}
++
++void Brainfuck::openingBracket(){
++    if (*_dp){
++        _stack.push(_ip);
++    } else {
++        int counter = 1;
++        while (counter){
++            _ip++;
++            if (*_ip == '[') counter++;
++            else if (*_ip == ']') counter--;
++        }
++    }
++}
++
++void Brainfuck::closingBracket(){;
++    if (*_dp){
++        _ip = _stack.top();
++    } else {
++        _stack.pop();
++    }
++}
++
++void Brainfuck::run(){    
++    while (_ip != _script.end()){
++        switch (*_ip){
++            case '>':
++                increaseDataPointer();
++                break;
++            case '<':
++                decreaseDataPointer();
++                break;
++            case '+':
++                increaseDataValue();
++                break;
++            case '-':
++                decreaseDataValue();
++                break;
++            case ',':
++                readDataValue();
++                break;
++            case '.':
++                printDataValue();
++                break;
++            case '[':
++                openingBracket();
++                break;
++            case ']':
++                closingBracket();
++                break;
++            default:
++                break;
++        }
++        ++_ip;
++    }
++}
+diff --git a/TP2/brainfuck.h b/TP2/brainfuck.h
+new file mode 100644
+index 0000000..d70bd1e
+--- /dev/null
++++ b/TP2/brainfuck.h
+@@ -0,0 +1,38 @@
++#ifndef BRAINFUCK_H
++#define BRAINFUCK_H
++
++#include "script_container.h"
++#include <stack>
++#include <string>
++#include <vector>
++#include <fstream>
++
++class Brainfuck{
++    //This implementation uses a fixed size data array of 30000 elements.
++    static const int _size = 30000;
++    char _array[_size];
++    char *_dp;
++    std::vector<char> _script;
++    std::vector<char>::iterator _ip;
++    std::ofstream _outputStream;
++    std::ifstream _inputStream;
++
++    std::stack<std::vector<char>::iterator> _stack;
++
++    void increaseDataPointer();
++    void decreaseDataPointer();
++    void increaseDataValue();
++    void decreaseDataValue();
++    void printDataValue();
++    void readDataValue();
++    void openingBracket();
++    void closingBracket();
++
++    public:
++    explicit Brainfuck(std::vector<char> &&script_buffer);
++    explicit Brainfuck(ScriptContainer sc);
++    ~Brainfuck();
++    void run();
++};
++
++#endif
+diff --git a/TP2/interpreter.cpp b/TP2/interpreter.cpp
+index bc617b9..ba447f5 100644
+--- a/TP2/interpreter.cpp
++++ b/TP2/interpreter.cpp
+@@ -1,121 +1,27 @@
+ #include "interpreter.h"
+-#include <iostream>
+-#include <cstring>
++#include "brainfuck.h"
+ #include <string>
++#include <fstream>
++#include <iostream>
++#include <vector>
+ 
+-Interpreter::Interpreter(std::string &&script_buffer){
+-    memset(this->_array, 0, this->_size);
+-    this->_dp = this->_array;
+-    this->_script = script_buffer;
+-    this->_ip = _script.begin();
+-}
+-
+-Interpreter::Interpreter(ScriptContainer sc){
+-    memset(this->_array, 0, this->_size);
+-    this->_dp = this->_array;
+-    this->_script = std::move(sc.getScript());
+-    this->_ip = _script.begin();
+-    this->_outputStream.open(sc.getOutputFile());
+-    this->_inputStream.open(sc.getInputFile());
+-}
+-
+-Interpreter::~Interpreter(){
+-    if (this->_outputStream.is_open()){
+-        this->_outputStream.close();
+-    }
+-    if (this->_inputStream.is_open()){
+-        this->_inputStream.close();
+-    }
+-}
+-
+-void Interpreter::increaseDataPointer(){
+-    if (_dp == _array+_size) return;   
+-    _dp += 1;
+-}
+-
+-void Interpreter::decreaseDataPointer(){
+-    if (_dp == _array) return; 
+-    _dp -= 1;
+-}
+-
+-void Interpreter::increaseDataValue(){
+-    *_dp += 1;
+-}
+-
+-void Interpreter::decreaseDataValue(){
+-    *_dp -= 1;
+-}
+-
+-void Interpreter::printDataValue(){
+-    if (_outputStream.is_open()){
+-        _outputStream << *_dp;
+-    } else{
+-        std::cout << *_dp;
+-    }
+-}
+-
+-void Interpreter::readDataValue(){
+-    char c;
+-    std::istream& is = _inputStream.is_open() ? _inputStream : std::cin;
+-    is.get(c);
+-    if (is.eof()) {
+-        *_dp = 0;
+-    } else {
+-        *_dp = c;
+-    }
+-}
+-
+-void Interpreter::openingBracket(){
+-    if (*_dp){
+-        _stack.push(_ip);
+-    } else {
+-        int counter = 1;
+-        while (counter){
+-            _ip++;
+-            if (*_ip == '[') counter++;
+-            else if (*_ip == ']') counter--;
+-        }
+-    }
+-}
+-
+-void Interpreter::closingBracket(){;
+-    if (*_dp){
+-        _ip = _stack.top();
+-    } else {
+-        _stack.pop();
+-    }
+-}
++Interpreter::Interpreter(std::string scriptPath) : _scriptPath(scriptPath){}
+ 
+-void Interpreter::run(){    
+-    while (*_ip){
+-        switch (*_ip){
+-            case '>':
+-                increaseDataPointer();
+-                break;
+-            case '<':
+-                decreaseDataPointer();
+-                break;
+-            case '+':
+-                increaseDataValue();
+-                break;
+-            case '-':
+-                decreaseDataValue();
+-                break;
+-            case ',':
+-                readDataValue();
+-                break;
+-            case '.':
+-                printDataValue();
+-                break;
+-            case '[':
+-                openingBracket();
+-                break;
+-            case ']':
+-                closingBracket();
+-                break;
+-            default:
+-                break;
+-        }
+-        _ip++;
++void Interpreter::run(){
++    int file_size;
++    std::ifstream file;
++    file.open(_scriptPath);
++    if (!file.is_open()){
++        std::cerr << "Couldn't open the file\n";
++        return;
+     }
++    file.seekg(0, file.end);
++    file_size = file.tellg();
++    file.seekg(0, file.beg);
++
++    std::vector<char> buffer(file_size, '\0');
++    file.read(&buffer[0], file_size);
++    file.close();
++    Brainfuck brainfuck(std::move(buffer));
++    brainfuck.run();
+ }
+diff --git a/TP2/interpreter.h b/TP2/interpreter.h
+index 5e65541..3ef6ec7 100644
+--- a/TP2/interpreter.h
++++ b/TP2/interpreter.h
+@@ -1,35 +1,11 @@
+ #ifndef INTERPRETER_H
+ #define INTERPRETER_H
+-
+-#include "script_container.h"
+-#include <stack>
+ #include <string>
+-#include <fstream>
+ 
+ class Interpreter{
+-    static const int _size = 30000;
+-    char _array[_size];
+-    char *_dp;
+-    std::string _script;
+-    std::string::iterator _ip;
+-    std::ofstream _outputStream;
+-    std::ifstream _inputStream;
+-
+-    std::stack<std::string::iterator> _stack;
+-
+-    void increaseDataPointer();
+-    void decreaseDataPointer();
+-    void increaseDataValue();
+-    void decreaseDataValue();
+-    void printDataValue();
+-    void readDataValue();
+-    void openingBracket();
+-    void closingBracket();
+-
++    std::string _scriptPath;
+     public:
+-    explicit Interpreter(std::string &&script_buffer);
+-    explicit Interpreter(ScriptContainer sc);
+-    ~Interpreter();
++    explicit Interpreter(std::string scriptPath);
+     void run();
+ };
+ 
+diff --git a/TP2/priority_queue_protected.cpp b/TP2/priority_queue_protected.cpp
+index a883239..be9cb75 100644
+--- a/TP2/priority_queue_protected.cpp
++++ b/TP2/priority_queue_protected.cpp
+@@ -2,9 +2,7 @@
+ #include "script_container.h"
+ #include <mutex>
+ 
+-PriorityQueueProtected::PriorityQueueProtected(){
+-    _finished = false;
+-}
++PriorityQueueProtected::PriorityQueueProtected(){}
+ 
+ void PriorityQueueProtected::push(ScriptContainer sc){
+     std::unique_lock<std::mutex> _lock(_mtx);
+@@ -14,27 +12,10 @@ void PriorityQueueProtected::push(ScriptContainer sc){
+ 
+ ScriptContainer PriorityQueueProtected::pop(){
+     std::unique_lock<std::mutex> _lock(_mtx);
+-    ScriptContainer sc;
+-    while (isEmpty() && !isFinished()){
++    while (_pq.empty()){
+         _cv.wait(_lock);
+     }
+-    if (!isEmpty()){
+-        sc = _pq.top();
+-        _pq.pop();
+-    }
++    ScriptContainer sc = _pq.top();
++    _pq.pop();
+     return sc;
+ }
+-
+-bool PriorityQueueProtected::isEmpty(){
+-    return _pq.empty();
+-}
+-
+-bool PriorityQueueProtected::isFinished(){
+-    return _finished;
+-}
+-
+-void PriorityQueueProtected::finish(){
+-    std::unique_lock<std::mutex> _lock(_mtx);
+-    _finished = true;
+-    _cv.notify_all();
+-}
+diff --git a/TP2/priority_queue_protected.h b/TP2/priority_queue_protected.h
+index 716d322..67f6175 100644
+--- a/TP2/priority_queue_protected.h
++++ b/TP2/priority_queue_protected.h
+@@ -11,15 +11,11 @@ class PriorityQueueProtected{
+         std::vector<ScriptContainer>, scCompare> _pq;
+     std::condition_variable _cv;
+     std::mutex _mtx;
+-    bool _finished;
+ 
+     public:
+     PriorityQueueProtected();
+     ScriptContainer pop();
+     void push(ScriptContainer sc);
+-    bool isEmpty();
+-    bool isFinished();
+-    void finish();
+ };
+ 
+ #endif
+diff --git a/TP2/script_container.cpp b/TP2/script_container.cpp
+index de393fa..ea0a54c 100644
+--- a/TP2/script_container.cpp
++++ b/TP2/script_container.cpp
+@@ -1,10 +1,10 @@
+ #include "script_container.h"
+ #include <string>
+ 
+-ScriptContainer::ScriptContainer(): _isValid(false){}
++ScriptContainer::ScriptContainer(): _priority(__INT_MAX__), _isValid(false){}
+ 
+ ScriptContainer::ScriptContainer(
+-        std::string &&priority,
++        int priority,
+         std::string &&input,
+         std::string &&output,
+         std::string &&script) :
+@@ -15,9 +15,10 @@ ScriptContainer::ScriptContainer(
+         _isValid(true){
+ }
+ 
+-std::string &ScriptContainer::getPriority(){
++int ScriptContainer::getPriority(){
+     return _priority;
+ }
++
+ std::string &ScriptContainer::getInputFile(){
+     return _inputFile;
+ }
+diff --git a/TP2/script_container.h b/TP2/script_container.h
+index 260e94a..8007b3c 100644
+--- a/TP2/script_container.h
++++ b/TP2/script_container.h
+@@ -5,7 +5,7 @@
+ #include <string>
+ 
+ class ScriptContainer{
+-    std::string _priority;
++    int _priority;
+     std::string _inputFile;
+     std::string _outputFile;
+     std::string _script;
+@@ -13,21 +13,20 @@ class ScriptContainer{
+ 
+     public:
+     ScriptContainer();
+-    ScriptContainer(std::string &&priority,
++    ScriptContainer(int priority,
+                     std::string &&input,
+                     std::string &&output,
+                     std::string &&script);
+-    std::string &getPriority();
++    int getPriority();
+     std::string &getInputFile();
+     std::string &getOutputFile();
+     std::string &getScript(); 
+     bool isValid();
+-    bool compare(ScriptContainer sc);
+ };
+ 
+ struct scCompare{
+     bool operator()(ScriptContainer sc1, ScriptContainer sc2){
+-        return sc1.getPriority().compare(sc2.getPriority()) >= 0;
++        return sc1.getPriority() >= sc2.getPriority();
+     }
+ };
+ 
+diff --git a/TP2/threadpool.cpp b/TP2/threadpool.cpp
+new file mode 100644
+index 0000000..6ca0881
+--- /dev/null
++++ b/TP2/threadpool.cpp
+@@ -0,0 +1,45 @@
++#include "threadpool.h"
++#include "worker.h"
++#include "tokenizer.h"
++#include "priority_queue_protected.h"
++#include <vector>
++#include <iostream>
++#include <string>
++
++Threadpool::Threadpool(int numberOfThreads):_numberOfThreads(numberOfThreads){
++    this->_threads.reserve(_numberOfThreads);
++    for (int i = 0; i < _numberOfThreads; ++i){
++        this->_threads.push_back(new Worker(_pq));
++    }
++}
++
++Threadpool::~Threadpool(){
++    for (size_t i = 0; i < this->_threads.size(); ++i){
++        this->_threads[i]->join();
++        delete this->_threads[i];
++    }
++}
++
++void Threadpool::run(){
++    for (size_t i = 0; i < this->_threads.size(); ++i){
++        this->_threads[i]->start();
++    }
++    Tokenizer tokenizer;
++    std::string line;
++    while (getline(std::cin, line, ')')){
++        if (!std::cin.good()) {
++            continue;
++            }
++        std::vector<std::string> strings = tokenizer.tokenize(line);
++        ScriptContainer sc(
++            std::stoi(strings[1], nullptr, 10),
++            std::move(strings[2]),
++            std::move(strings[3]),
++            std::move(strings[4])); 
++        _pq.push(sc);
++    }
++    for (int i = 0; i < _numberOfThreads; ++i){
++        ScriptContainer invalid_sc;
++        _pq.push(invalid_sc);
++    }
++}
+diff --git a/TP2/threadpool.h b/TP2/threadpool.h
+new file mode 100644
+index 0000000..f69aa18
+--- /dev/null
++++ b/TP2/threadpool.h
+@@ -0,0 +1,20 @@
++#ifndef THREADPOOL_H
++#define THREADPOOL_H
++
++#include "priority_queue_protected.h"
++#include <vector>
++#include "thread.h"
++#include "priority_queue_protected.h"
++
++class Threadpool{
++    std::vector<Thread*> _threads;
++    int _numberOfThreads;
++    PriorityQueueProtected _pq;
++
++    public:
++    explicit Threadpool(int numberOfThreads);
++    ~Threadpool();
++    void run();
++};
++
++#endif
+diff --git a/TP2/tokenizer.cpp b/TP2/tokenizer.cpp
+index 10f9f32..b3f3e2b 100644
+--- a/TP2/tokenizer.cpp
++++ b/TP2/tokenizer.cpp
+@@ -6,14 +6,22 @@ Tokenizer::Tokenizer(){}
+ 
+ std::vector<std::string> Tokenizer::tokenize(std::string line){
+     std::vector<std::string> strings;
+-    std::string delimiter = ", ";
++    size_t tokenLength = 0;
+     size_t pos = 0;
+     std::string token;
+-    while ((pos = line.find(delimiter)) != std::string::npos){
+-        token = line.substr(0, pos);
+-        strings.push_back(std::move(token));
+-        line.erase(0, pos + delimiter.length());
++    strings.reserve(5);
++    std::string::iterator it;
++    for (it = line.begin(); it != line.end(); ++it){
++        if (*it == ',' && *(it+1) == ' '){
++            token = line.substr(pos+1, tokenLength-1);
++            strings.push_back(token);
++            pos += tokenLength + 1;
++            tokenLength = 0;
++        } else{
++            ++tokenLength;
++        }
+     }
+-    strings.push_back(line);
++    token = line.substr(pos+1, tokenLength-1);
++    strings.push_back(token);
+     return strings;
+ }
+diff --git a/TP2/tp.cpp b/TP2/tp.cpp
+index 92df9a3..b93ea40 100644
+--- a/TP2/tp.cpp
++++ b/TP2/tp.cpp
+@@ -1,13 +1,12 @@
+-#include <queue> 
+-#include <sstream>
+-#include <iostream>
+ #include <cstring>
+ #include <string>
+ #include <vector>
++#include "brainfuck.h"
+ #include "interpreter.h"
+ #include "tokenizer.h"
+ #include "worker.h"
+ #include "priority_queue_protected.h"
++#include "threadpool.h"
+ 
+ #define ARGC_SIZE 3
+ int main(int argc, char **argv){
+@@ -15,51 +14,13 @@ int main(int argc, char **argv){
+         return 1;
+     }
+     if (strcmp(argv[1], "interprete") == 0){
+-        int file_size;
+-        std::ifstream file;
+-        file.open(argv[2]);
+-        file.seekg(0, file.end);
+-        file_size = file.tellg();
+-        file.seekg(0, file.beg);
+-
+-        std::string buffer(file_size, '\0');
+-        file.read(&buffer[0], file_size);
+-        file.close();
+-        Interpreter interpreter(std::move(buffer));
++        std::string scriptPath = argv[2];
++        Interpreter interpreter(scriptPath);
+         interpreter.run();
+     }
+     if (strcmp(argv[1], "thread-pool") == 0){
+-        PriorityQueueProtected pq;
+-        std::vector<Thread*> threads;
+         int numberOfThreads = atoi(argv[2]);
+-        for (int i = 0; i < numberOfThreads; ++i){
+-            threads.push_back(new Worker(pq));
+-        }
+-        for (int i = 0; i < numberOfThreads; ++i){
+-            threads[i]->start();
+-        }
+-        Tokenizer tokenizer;
+-        std::string line;
+-        while (getline(std::cin, line, ')')){
+-            if (!std::cin.good()) {
+-                continue;
+-                }
+-            std::vector<std::string> strings = tokenizer.tokenize(line);
+-            ScriptContainer sc(
+-                std::move(strings[1]),
+-                std::move(strings[2]),
+-                std::move(strings[3]),
+-                std::move(strings[4])); 
+-            pq.push(sc);
+-        }
+-        while (!pq.isFinished()){
+-            if (pq.isEmpty()){
+-                pq.finish();
+-            } 
+-        }
+-        for (int i = 0; i < numberOfThreads; ++i){
+-            threads[i]->join();
+-            delete threads[i];
+-        }       
++        Threadpool threadpool(numberOfThreads);
++        threadpool.run();  
+     }
+ }
+diff --git a/TP2/worker.cpp b/TP2/worker.cpp
+index 274d2e5..1880c00 100644
+--- a/TP2/worker.cpp
++++ b/TP2/worker.cpp
+@@ -1,14 +1,17 @@
+ #include "worker.h"
+-#include "interpreter.h"
++#include "brainfuck.h"
+ #include "script_container.h"
+ 
+ Worker::Worker(PriorityQueueProtected &pq) : _pq(pq){}
+ void Worker::run(){
+-    while (!_pq.isFinished()){
++    bool keep_working = true;
++    while (keep_working){    
+         ScriptContainer sc = _pq.pop();
+         if (sc.isValid()){
+-            Interpreter interpreter(sc);
+-            interpreter.run();
++            Brainfuck brainfuck(sc);
++            brainfuck.run();
++        } else {
++            keep_working = false;
+         }
+     }   
+ }
