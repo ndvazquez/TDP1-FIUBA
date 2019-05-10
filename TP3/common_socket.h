@@ -2,6 +2,9 @@
 #define SOCKET_H
 #include <string>
 
+#define ERROR_CODE -1
+#define INVALID_FD -1
+
 class Socket{
     int _fd;
     explicit Socket(int fileDescriptor);
