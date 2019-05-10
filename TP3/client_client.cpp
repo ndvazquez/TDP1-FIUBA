@@ -9,18 +9,21 @@
 #include <vector>
 #include <string>
 #include <fstream>
-
+#include <exception>
 
 Client::Client(Key &privateKey,
             Key &publicKey,
             Key &serverPublicKey,
-            Socket &socket,
-            std::string &filePath) : 
+            std::string &filePath,
+            std::string &host,
+            std::string &port) : 
             _privateKey(std::move(privateKey)),
             _publicKey(std::move(publicKey)),
             _serverPublicKey(std::move(serverPublicKey)),
-            _socket(std::move(socket)),
-            _filePath(filePath){}
+            _filePath(filePath){
+    int status = _socket.connectToHost(host, port);
+    if (status == -1) throw std::runtime_error("Couldn't connect to host.\n");
+}
 
 std::string Client::_parseLine(std::string &line){
     std::string::iterator it;

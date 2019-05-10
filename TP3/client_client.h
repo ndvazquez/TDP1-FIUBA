@@ -13,16 +13,17 @@ class Client {
     Key _privateKey;
     Key _publicKey;
     Key _serverPublicKey;
-    Socket _socket;
     std::string _filePath;
+    Socket _socket;
     std::string _parseLine(std::string &line);
     CertificateHandler _createCertificateFromFile();
     public:
     Client(Key &privateKey,
             Key &publicKey,
             Key &serverPublicKey,
-            Socket &socket,
-            std::string &filePath);
+            std::string &filePath,
+            std::string &host,
+            std::string &port);
     void requestCertificateCreation();
     void requestCertificateRevocation();
 };

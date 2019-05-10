@@ -49,11 +49,9 @@ int main(int argc, char** argv){
     while (getline(serverKeyFile, line, ' ')){
         keyInfo.push_back(line);
     }
+
     Key serverPubKey(std::stoi(keyInfo[0]), std::stoi(keyInfo[1]));
-    Socket clientSocket;
-    int status = clientSocket.connectToHost(host, port);
-    if (status == -1) return 0;
-    Client client(privateKey, publicKey, serverPubKey, clientSocket, filePath);
+    Client client(privateKey, publicKey, serverPubKey, filePath, host, port);
 
     if (!mode.compare(MODE_NEW)) client.requestCertificateCreation();
     if (!mode.compare(MODE_REVOKE)) client.requestCertificateRevocation();
