@@ -7,6 +7,16 @@
 #include "common_protocol.h"
 #include "common_key.h"
 
+#define REQUEST_NEW_CERT 0
+#define REQUEST_REVOKE_CERT 1
+#define CERT_CREATION_SUCCESS 0
+#define SUBJECT_ALREADY_EXISTS 1
+#define CLIENT_INVALID_HASH 1
+#define CERT_REVOCATION_SUCCESS 0
+#define INVALID_HASH 2
+#define SUBJECT_DOESNT_EXISTS 1
+#define DEFAULT_CERT_ISSUER "Taller de programacion 1"
+
 class Worker : public Thread{
     DatabaseHandler &_database;
     Socket _peerSocket;

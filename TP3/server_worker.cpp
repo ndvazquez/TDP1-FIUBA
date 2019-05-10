@@ -31,9 +31,9 @@ void Worker::run(){
         Protocol protocol(_peerSocket);
         uint8_t action;
         protocol >> action;
-        if (action == 0){
+        if (action == REQUEST_NEW_CERT){
             newCertificate(protocol);
-        } else if (action == 1){
+        } else if (action == REQUEST_REVOKE_CERT){
             revoke(protocol);
         }
         _isDead = true;
@@ -62,7 +62,7 @@ void Worker::newCertificate(Protocol &protocol){
 
     if (!_database.lookup(subject)){
         uint32_t serial = _database.getNextId();
-        std::string issuer = "Taller de programacion 1";
+        std::string issuer = DEFAULT_CERT_ISSUER;
         Key clientPubKey(exponent, modulus);
         CertificateHandler ch(serial, subject, issuer, s_date, e_date,
                             clientPubKey);
@@ -75,15 +75,15 @@ void Worker::newCertificate(Protocol &protocol){
         // Lost ownership of clientPubKey so I have to create it again.
         Key key(exponent, modulus);
         _database.insert(subject, key);
-        uint8_t certificateCreated = 0;
+        uint8_t certificateCreated = CERT_CREATION_SUCCESS;
         protocol << certificateCreated;
         protocol << ch;
         protocol << encryptedCert;
         uint8_t clientResponse;
-         protocol >> clientResponse;
-        if (clientResponse == 1) _database.remove(subject);
+        protocol >> clientResponse;
+        if (clientResponse == CLIENT_INVALID_HASH) _database.remove(subject);
     } else{
-        uint8_t subjectAlreadyExists = 1;
+        uint8_t subjectAlreadyExists = SUBJECT_ALREADY_EXISTS;
         protocol << subjectAlreadyExists;
     }
 }
@@ -104,14 +104,14 @@ void Worker::revoke(Protocol &protocol){
                                                     clientPubKey.getModulus());
         if (hashed_cert == unencryptedCert){
             _database.remove(subject);
-            uint8_t ok = 0;
+            uint8_t ok = CERT_REVOCATION_SUCCESS;
             protocol << ok;
         } else {
-            uint8_t invalidHash = 2;
+            uint8_t invalidHash = INVALID_HASH;
             protocol << invalidHash;
         }
     } else{
-        uint8_t subjectDoesntExists = 1;
+        uint8_t subjectDoesntExists = SUBJECT_DOESNT_EXISTS;
         protocol << subjectDoesntExists;
     }
 }

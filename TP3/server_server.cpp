@@ -19,7 +19,7 @@ void Server::run(std::string &host, std::string &service){
     char c = '*';
     Socket acceptor;
     int status = acceptor.bindAndListen(host, service);
-    if (status == -1){
+    if (status == SOCKET_BIND_ERROR){
         throw std::runtime_error("Couldn't bind to service.\n");
     }
     Acceptor acceptorThread(_database, acceptor, _privateKey);

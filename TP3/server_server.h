@@ -5,6 +5,8 @@
 #include "common_socket.h"
 #include <string>
 
+#define SOCKET_BIND_ERROR -1
+
 class Server{
     Key _privateKey;
     Key _publicKey;
