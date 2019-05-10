@@ -22,7 +22,8 @@
 
 int main(int argc, char** argv){
     std::string mode = argv[POS_MODE];
-    if (argc != ARG_SIZE || (mode.compare(MODE_NEW) && mode.compare(MODE_REVOKE))){
+    if (argc != ARG_SIZE || (mode.compare(MODE_NEW) &&
+                            mode.compare(MODE_REVOKE))){
         std::cout << "Error: argumentos invalidos.\n";
     }
     std::string host = argv[POS_HOST];
