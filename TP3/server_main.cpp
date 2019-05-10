@@ -20,15 +20,10 @@ int main(int argc, char** argv){
     std::string dbPath = argv[3];
     std::string host = "localhost";
     std::string service = argv[1];
-    Socket acceptor;
-    int status = acceptor.bindAndListen(host, service);
-    if (status == -1){
-        std::cout << "No se pudo bindear al socket\n";
-        return 1;
-    }
-    Server server(privateKey, publicKey, dbPath, acceptor);
+    
+    Server server(privateKey, publicKey, dbPath);
     try {
-        server.run();
+        server.run(host, service);
     } catch (...){
         return 1;
     }

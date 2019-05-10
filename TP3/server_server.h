@@ -9,13 +9,11 @@ class Server{
     Key _privateKey;
     Key _publicKey;
     DatabaseHandler _database;
-    Socket _acceptor;
     public:
     Server(Key &privateKey,
             Key &publicKey,
-            std::string &dbPath,
-            Socket &acceptor);
-    void run();
+            std::string &dbPath);
+    void run(std::string &host, std::string &service);
 };
 
 #endif
