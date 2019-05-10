@@ -78,12 +78,12 @@ void Client::requestCertificateCreation(){
     while (std::getline(certificateInfo, line, '\n')){
         lines.push_back(std::move(line));
     }
-    std::string subject = std::move(lines[0]);
+    std::string subject = std::move(lines[CERT_INFO_POS_SUBJECT]);
     std::string s_date;
     std::string e_date;
     if (lines.size() == MAX_REQUEST_INFO_LINES){
-        s_date = std::move(lines[1]);
-        e_date = std::move(lines[2]);
+        s_date = std::move(lines[CERT_INFO_POS_STARTING_DATE]);
+        e_date = std::move(lines[CERT_INFO_POS_ENDING_DATE]);
     } else {
         DateHandler dh;
         dh.setStartAndEndDate(s_date, e_date);
@@ -91,7 +91,7 @@ void Client::requestCertificateCreation(){
 
     Protocol protocol(_socket);
     // We send all the required data to create a new cert.
-    uint8_t newCertificate = 0;
+    uint8_t newCertificate = NEW_CERTIFICATE;
     protocol << newCertificate;
     protocol << subject;
     protocol << _publicKey.getModulus();
@@ -101,7 +101,7 @@ void Client::requestCertificateCreation(){
     
     uint8_t new_status;
     protocol >> new_status;
-    if (new_status != 0) {
+    if (new_status != CERTIFICATE_CREATED) {
         std::cout << "Error: ya existe un certificado.\n";
         return;
     }
@@ -123,11 +123,11 @@ void Client::requestCertificateCreation(){
     std::cout << "Hash del servidor: " << publicStep << std::endl;
     std::cout << "Hash calculado: " << hashed_cert << std::endl;
 
-    uint8_t response = publicStep == hashed_cert ? 0 : 1;
-    if (response == 1){
+    uint8_t response = publicStep == hashed_cert ? HASH_OK : HASH_ERROR;
+    if (response == HASH_ERROR){
         std::cout << "Error: los hashes no coinciden.\n";
     }
-    if (response == 0){
+    if (response == HASH_OK){
         std::ofstream outputFile;
         std::string certFileName = subject + ".cert";
         outputFile.open(certFileName);
@@ -149,7 +149,7 @@ void Client::requestCertificateRevocation(){
     uint32_t publicStep = encrypter.rsa(privateStep,
                                         _serverPublicKey.getExponent(),
                                         _serverPublicKey.getModulus());
-    uint8_t revokeCertificate = 1;
+    uint8_t revokeCertificate = REVOKE_CERTIFICATE;
     protocol << revokeCertificate;
     protocol << ch;
     protocol << publicStep;
@@ -159,6 +159,10 @@ void Client::requestCertificateRevocation(){
     std::cout << "Huella enviada: " << publicStep << std::endl;
     uint8_t serverResponse;
     protocol >> serverResponse;
-    if (serverResponse == 1) std::cout << "Error: usuario no registrado.\n";
-    if (serverResponse == 2) std::cout << "Error: los hashes no coinciden.\n";
+    if (serverResponse == SERVER_UNREGISTERED_USER) {
+        std::cout << "Error: usuario no registrado.\n";
+    }
+    if (serverResponse == SERVER_HASH_ERROR) {
+        std::cout << "Error: los hashes no coinciden.\n";
+    }
 }
