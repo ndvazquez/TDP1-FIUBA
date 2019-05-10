@@ -42,7 +42,8 @@ Socket::Socket(){
 Socket::Socket(int fileDescriptor) : _fd(fileDescriptor){}
 
 Socket::Socket(Socket&& other){
-    *this = std::move(other);
+    this->_fd = other._fd;
+    other._fd = -1;
 }
 
 Socket& Socket::operator=(Socket&& other){
