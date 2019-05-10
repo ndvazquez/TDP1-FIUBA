@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#define MAX_REQUEST_INFO_LINES 3
+
 
 Client::Client(Key &privateKey,
             Key &publicKey,

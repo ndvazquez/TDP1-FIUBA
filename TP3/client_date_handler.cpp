@@ -3,7 +3,7 @@
 #include <ctime>
 #include <ratio>
 #include <chrono>
-#define DATE_BUFFER_MAX_LEN 50
+
 DateHandler::DateHandler(){}
 
 void DateHandler::setStartAndEndDate(std::string &s_date, std::string &e_date){

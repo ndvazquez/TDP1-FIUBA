@@ -2,6 +2,7 @@
 #define DATE_HANDLER_H
 
 #include <string>
+#define DATE_BUFFER_MAX_LEN 50
 
 class DateHandler{
     public:

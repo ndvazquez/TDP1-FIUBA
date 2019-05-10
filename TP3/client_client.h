@@ -4,6 +4,11 @@
 #include "common_socket.h"
 #include "common_certificate_handler.h"
 #include <string>
+#define MAX_REQUEST_INFO_LINES 3
+#define PARAMS_SIZE 7
+#define MODE_NEW "new"
+#define MODE_REVOKE "revoke"
+
 class Client {
     Key _privateKey;
     Key _publicKey;

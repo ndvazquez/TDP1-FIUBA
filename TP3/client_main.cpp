@@ -6,10 +6,6 @@
 #include <fstream>
 #include <iostream>
 
-#define PARAMS_SIZE 7
-#define MODE_NEW "new"
-#define MODE_REVOKE "revoke"
-
 int main(int argc, char** argv){
     std::string mode = argv[3];
     if (argc != 7 || (mode.compare(MODE_NEW) && mode.compare(MODE_REVOKE))){
