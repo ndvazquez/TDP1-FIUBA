@@ -3,8 +3,44 @@
 #include <string>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
+#include <vector>
+
+std::string CertificateHandler::_parseLine(std::string &line){
+    std::string::iterator it;
+    size_t tokenBegin = 0;
+    size_t tokenLength = 0;
+    for (it = line.begin(); it != line.end(); ++it){
+        ++tokenBegin;
+        if (*it == ':') break;
+    }
+    ++tokenBegin;
+    for (it = line.begin() + tokenBegin; it != line.end() && *it != '('; ++it){
+        ++tokenLength;
+    }
+    std::string token = line.substr(tokenBegin, tokenLength);
+    return token;
+}
 
 CertificateHandler::CertificateHandler(){}
+
+CertificateHandler::CertificateHandler(std::string &path){
+    std::ifstream certFile;
+    certFile.open(path);
+    std::vector<std::string> lines;
+    std::string line;
+    while (getline(certFile, line, '\n')){
+        lines.push_back(line);
+    }
+    _serial = std::stoi(_parseLine(lines[VECTOR_POS_SERIAL]));
+    _subject = _parseLine(lines[VECTOR_POS_SUBJECT]);
+    _issuer = _parseLine(lines[VECTOR_POS_ISSUER]);
+    _s_date = _parseLine(lines[VECTOR_POS_SDATE]);
+    _e_date = _parseLine(lines[VECTOR_POS_EDATE]);
+    uint16_t modulus = std::stoi(_parseLine(lines[VECTOR_POS_MODULUS]));
+    uint8_t exponent = std::stoi(_parseLine(lines[VECTOR_POS_EXP]));
+    _key = Key(exponent, modulus);
+}
 
 CertificateHandler::CertificateHandler(uint32_t serial, 
                             std::string subject,

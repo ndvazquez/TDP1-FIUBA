@@ -2,6 +2,13 @@
 #define CERTIFICATE_HANDLER_H
 #include <string>
 #include "common_key.h"
+#define VECTOR_POS_SERIAL 1
+#define VECTOR_POS_SUBJECT 2
+#define VECTOR_POS_ISSUER 3
+#define VECTOR_POS_SDATE 5
+#define VECTOR_POS_EDATE 6
+#define VECTOR_POS_MODULUS 8
+#define VECTOR_POS_EXP 9
 
 class CertificateHandler{
     uint32_t _serial;
@@ -10,11 +17,11 @@ class CertificateHandler{
     std::string _s_date;
     std::string _e_date;
     Key _key;
-
     std::string _to_hexadecimal(int number, int width);
-
+    std::string _parseLine(std::string &line);
     public:
     CertificateHandler();
+    CertificateHandler(std::string &path);
     CertificateHandler(uint32_t serial, 
                             std::string subject,
                             std::string issuer,

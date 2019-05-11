@@ -25,8 +25,6 @@ class Client {
     Key _serverPublicKey;
     std::string _filePath;
     Socket _socket;
-    std::string _parseLine(std::string &line);
-    CertificateHandler _createCertificateFromFile();
     public:
     Client(Key &privateKey,
             Key &publicKey,

@@ -25,50 +25,6 @@ Client::Client(Key &privateKey,
     if (status == -1) throw std::runtime_error("Couldn't connect to host.\n");
 }
 
-std::string Client::_parseLine(std::string &line){
-    std::string::iterator it;
-    size_t tokenBegin = 0;
-    size_t tokenLength = 0;
-    for (it = line.begin(); it != line.end(); ++it){
-        ++tokenBegin;
-        if (*it == ':') break;
-    }
-    ++tokenBegin;
-    for (it = line.begin() + tokenBegin; it != line.end() && *it != '('; ++it){
-        ++tokenLength;
-    }
-    std::string token = line.substr(tokenBegin, tokenLength);
-    return token;
-}
-
-CertificateHandler Client::_createCertificateFromFile(){
-    std::ifstream certificateFile;
-    //TODO: Tirar exception si falla.
-    certificateFile.open(_filePath);
-    std::string line;
-    uint32_t serial = 0;
-    std::string subject;
-    std::string issuer;
-    std::string s_date;
-    std::string e_date;
-    uint16_t modulus = 0;
-    uint8_t exponent = 0;
-    int counter = 0;
-    while (getline(certificateFile, line, '\n')){
-        if (counter == 1) serial = std::stoi(_parseLine(line));
-        if (counter == 2) subject = _parseLine(line);
-        if (counter == 3) issuer = _parseLine(line);
-        if (counter == 5) s_date  = _parseLine(line);
-        if (counter == 6) e_date = _parseLine(line);
-        if (counter == 8) modulus = std::stoi(_parseLine(line));
-        if (counter == 9) exponent = std::stoi(_parseLine(line));
-        ++counter;
-    }
-    Key key(exponent, modulus);
-    CertificateHandler ch(serial, subject, issuer, s_date, e_date, key);
-    return ch;
-}
-
 void Client::requestCertificateCreation(){
     std::ifstream certificateInfo;
     // Tirar excepción si no se abre bien.
@@ -138,7 +94,7 @@ void Client::requestCertificateCreation(){
 
 void Client::requestCertificateRevocation(){
     Protocol protocol(_socket);
-    CertificateHandler ch = _createCertificateFromFile();
+    CertificateHandler ch(_filePath);
     std::string cert = ch.createCertificate();
     Hash hasher;
     Encrypter encrypter;
