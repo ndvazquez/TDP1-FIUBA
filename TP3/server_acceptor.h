@@ -4,13 +4,13 @@
 #include "common_socket.h"
 #include "server_database_handler.h"
 #include "common_key.h"
-#include <vector>
+#include <list>
 
 class Acceptor : public Thread{
     DatabaseHandler &_database;
     Socket &_socket;
     Key &_serverPrivateKey;
-    std::vector<Thread*> _workers;
+    std::list<Thread*> _workers;
     bool _keepRunning;
     public:
     Acceptor(DatabaseHandler &db, Socket &socket, Key &key);

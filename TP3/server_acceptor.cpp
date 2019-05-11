@@ -1,5 +1,7 @@
 #include "server_acceptor.h"
 #include "server_worker.h"
+#include "server_thread.h"
+#include <algorithm>
 
 Acceptor::Acceptor(DatabaseHandler &db, Socket &socket, Key &key):
                 _database(db),
@@ -7,26 +9,33 @@ Acceptor::Acceptor(DatabaseHandler &db, Socket &socket, Key &key):
                 _serverPrivateKey(key),
                 _keepRunning(true){}
 
+bool isDone(Worker* worker){
+    return worker->isDead();
+}
+
 void Acceptor::run(){
     while (_keepRunning){
         Socket peerSocket = _socket.acceptPeer();
         if (!peerSocket.isValid()) continue;
-        _workers.push_back(new Worker(_database, 
+        _workers.push_front(new Worker(_database, 
                                     peerSocket, 
                                     _serverPrivateKey));
-        _workers.back()->start();
-        for (size_t i = 0; i < _workers.size(); ++i){
-            if (_workers[i]->isDead()){
-                _workers[i]->join();
-                delete _workers[i];
-                _workers.erase(_workers.begin() + i);
+        _workers.front()->start();
+        auto it = _workers.begin();
+        while (it != _workers.end()){
+            if ((*it)->isDead()){
+                (*it)->join();
+                delete *it;
+                it = _workers.erase(it);
+            } else{
+                ++it;
             }
         }
     }
-    for (size_t i = 0; i < _workers.size(); ++i){
-        _workers[i]->stop();
-        _workers[i]->join();
-        delete _workers[i];
+    for (auto it = _workers.begin(); it != _workers.end(); ++it){
+        (*it)->stop();
+        (*it)->join();
+        delete *it;
     }
 }
 
