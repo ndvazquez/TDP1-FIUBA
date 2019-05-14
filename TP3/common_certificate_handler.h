@@ -19,9 +19,10 @@ class CertificateHandler{
     Key _key;
     std::string _to_hexadecimal(int number, int width);
     std::string _parseLine(std::string &line);
+
     public:
     CertificateHandler();
-    CertificateHandler(std::string &path);
+    explicit CertificateHandler(std::string &path);
     CertificateHandler(uint32_t serial, 
                             std::string subject,
                             std::string issuer,
